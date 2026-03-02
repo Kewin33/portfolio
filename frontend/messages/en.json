@@ -1,0 +1,101 @@
+{
+  "Index": {
+    "title": "Welcome to my Portfolio",
+    "description": "I am a CS Student, Developer, Chess Player, and Musician.",
+    "hello": "Hey, my name is",
+    "rolePrefix": "I'm a",
+    "roles": "CS Student, Developer, Chess Player, Musician",
+    "projects": "Projects",
+    "projectTitle": "Depictor",
+    "projectDesc": "Open-source web app for controlling 2D pen plotters with a modern UI, real-time plotting progress and image-to-drawing workflow.",
+    "github": "GitHub",
+    "demo": "Demo"
+  },
+  "Navigation": {
+    "home": "Home",
+    "timeline": "Timeline",
+    "chess": "Chess",
+    "music": "Music",
+    "studies": "Studies",
+    "sports": "Sports",
+    "hobbies": "Hobbies"
+  },
+  "Timeline": {
+    "title": "Timeline",
+    "addEvent": "Add Event",
+    "editEvent": "Edit Event",
+    "manageEvents": "Manage Events",
+    "eventTitle": "Event Title",
+    "eventDescription": "Description",
+    "startDate": "Start",
+    "endDate": "End",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "softDelete": "Soft Delete",
+    "loading": "Loading timeline...",
+    "events": {
+      "portfolio": {
+        "title": "Portfolio Launch",
+        "description": "My portfolio project is live!"
+      },
+      "tournament": {
+        "title": "Chess Tournament",
+        "description": "Participated in a Lichess blitz tournament."
+      },
+      "music": {
+        "title": "Music Release",
+        "description": "Released a new song on Spotify."
+      },
+      "studies": {
+        "title": "Exam Phase",
+        "description": "Intense study phase overlapping with the tournament."
+      }
+    }
+  },
+  "ChessPage": {
+    "title": "Chess & Lichess",
+    "subtitle": "Explore my chess journey, puzzles, and studies.",
+    "sections": {
+      "puzzlesTitle": "Puzzles",
+      "puzzlesDesc": "Interactive chess puzzles collection",
+      "variantsTitle": "Variants & Studies",
+      "variantsDesc": "My best games embedded from Lichess",
+      "tournamentsTitle": "Tournaments",
+      "tournamentsDesc": "Chess tournament diary",
+      "freizeitTitle": "Chess Leisure",
+      "freizeitDesc": "Tools and memories from chess camps"
+    },
+    "studyTitle": "Recent Study Example",
+    "studyPlaceholder": "Lichess Iframe Embed Placeholder"
+  },
+  "MusicPage": {
+    "title": "Music",
+    "subtitle": "My original songs, covers, and audio uploads",
+    "playerTitle": "Spotify-like Player (Placeholder)",
+    "playerPlaceholder": "React H5 Audio Player / Native Audio Tag"
+  },
+  "StudiesPage": {
+    "title": "Computer Science Studies",
+    "subtitle": "PDF collection and useful tools",
+    "toolTitle": "PDF Summarizer Tool",
+    "toolDescription": "Integrate existing Python backend / Next.js logic here via iframe or direct migration.",
+    "toolPlaceholder": "Tool Component Placeholder"
+  },
+  "SportsPage": {
+    "title": "Sports & Clips",
+    "subtitle": "Gallery of cool sport clips",
+    "video": "Video"
+  },
+  "HobbiesPage": {
+    "title": "Hobbies",
+    "subtitle": "Things I enjoy outside of studies and coding",
+    "items": {
+      "chess": "Chess",
+      "music": "Music",
+      "fitness": "Fitness",
+      "travel": "Travel"
+    }
+  }
+}

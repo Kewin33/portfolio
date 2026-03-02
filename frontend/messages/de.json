@@ -1,0 +1,91 @@
+{
+  "Index": {
+    "title": "Willkommen zu meinem Portfolio",
+    "description": "Ich bin Informatik-Student, Entwickler, Schachspieler und Musiker."
+  },
+  "Navigation": {
+    "home": "Startseite",
+    "timeline": "Zeitstrahl",
+    "chess": "Schach",
+    "music": "Musik",
+    "studies": "Studium",
+    "sports": "Sport",
+    "hobbies": "Hobbies"
+  },
+  "Timeline": {
+    "title": "Zeitstrahl",
+    "addEvent": "Neues Ereignis hinzufügen",
+    "editEvent": "Ereignis bearbeiten",
+    "manageEvents": "Ereignisse verwalten",
+    "eventTitle": "Titel des Ereignisses",
+    "eventDescription": "Beschreibung",
+    "startDate": "Start",
+    "endDate": "Ende",
+    "add": "Hinzufügen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "edit": "Bearbeiten",
+    "events": {
+      "portfolio": {
+        "title": "Portfolio-Launch",
+        "description": "Mein Portfolio-Projekt ist live!"
+      },
+      "tournament": {
+        "title": "Schachturnier",
+        "description": "Teilnahme an einem Lichess-Blitzturnier."
+      },
+      "music": {
+        "title": "Musik-Release",
+        "description": "Neuen Song auf Spotify veröffentlicht."
+      },
+      "studies": {
+        "title": "Klausurenphase",
+        "description": "Intensive Lernphase mit Überschneidung zum Turnier."
+      }
+    }
+  },
+  "ChessPage": {
+    "title": "Schach & Lichess",
+    "subtitle": "Entdecke meinen Schachweg, Puzzles und Studien.",
+    "sections": {
+      "puzzlesTitle": "Puzzles",
+      "puzzlesDesc": "Interaktive Schachpuzzles-Sammlung",
+      "variantsTitle": "Varianten & Studien",
+      "variantsDesc": "Meine besten Partien aus Lichess",
+      "tournamentsTitle": "Turniere",
+      "tournamentsDesc": "Schachturnier-Tagebuch",
+      "freizeitTitle": "Schachfreizeit",
+      "freizeitDesc": "Tools und Erinnerungen aus Schachcamps"
+    },
+    "studyTitle": "Aktuelles Studien-Beispiel",
+    "studyPlaceholder": "Lichess-Iframe-Platzhalter"
+  },
+  "MusicPage": {
+    "title": "Musik",
+    "subtitle": "Meine eigenen Songs, Covers und Audio-Uploads",
+    "playerTitle": "Spotify-ähnlicher Player (Platzhalter)",
+    "playerPlaceholder": "React H5 Audio Player / Nativer Audio-Tag"
+  },
+  "StudiesPage": {
+    "title": "Informatik-Studium",
+    "subtitle": "PDF-Sammlung und nützliche Tools",
+    "toolTitle": "PDF-Zusammenfasser-Tool",
+    "toolDescription": "Bestehende Python-Backend- / Next.js-Logik hier per iframe oder direkter Migration integrieren.",
+    "toolPlaceholder": "Tool-Komponenten-Platzhalter"
+  },
+  "SportsPage": {
+    "title": "Sport & Clips",
+    "subtitle": "Galerie cooler Sportclips",
+    "video": "Video"
+  },
+  "HobbiesPage": {
+    "title": "Hobbys",
+    "subtitle": "Dinge, die ich außerhalb von Studium und Coding gerne mache",
+    "items": {
+      "chess": "Schach",
+      "music": "Musik",
+      "fitness": "Fitness",
+      "travel": "Reisen"
+    }
+  }
+}

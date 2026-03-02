@@ -30,7 +30,8 @@ yarn-error.log*
 dist/
 
 # secrets
-planning/*.json
+planning/
 
 # Next.js static
+# keep generated profile placeholder out of repo if present
 /public/profile-placeholder.png
