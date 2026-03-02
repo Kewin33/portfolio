@@ -2,12 +2,12 @@
   "Index": {
     "title": "Willkommen zu meinem Portfolio",
     "description": "Ich bin Informatik-Student, Entwickler, Schachspieler und Musiker.",
-    "hello": "Hey, my name is",
-    "rolePrefix": "I'm a",
-    "roles": "CS Student, Developer, Chess Player, Musician",
-    "projects": "Projects",
+    "hello": "Hey, ich heiße",
+    "rolePrefix": "Ich bin",
+    "roles": "Informatik-Student, Entwickler, Schachspieler, Musiker",
+    "projects": "Projekte",
     "projectTitle": "Depictor",
-    "projectDesc": "Open-source web app for controlling 2D pen plotters with a modern UI, real-time plotting progress and image-to-drawing workflow.",
+    "projectDesc": "Open-Source-Webanwendung zur Steuerung von 2D-Stiftplottern mit moderner UI, Echtzeit-Plot-Fortschritt und Bild-zu-Zeichnung-Workflow.",
     "github": "GitHub",
     "demo": "Demo"
   },
