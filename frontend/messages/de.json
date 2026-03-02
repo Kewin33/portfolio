@@ -30,7 +30,8 @@
         "title": "Portfolio-Launch",
         "description": "Mein Portfolio-Projekt ist live!"
       },
-      "tournament": {
+    "loading": "Zeitstrahl wird geladen...",
+    "add": "Hinzufügen",
         "title": "Schachturnier",
         "description": "Teilnahme an einem Lichess-Blitzturnier."
       },
