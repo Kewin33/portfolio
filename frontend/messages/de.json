@@ -25,13 +25,13 @@
     "save": "Speichern",
     "cancel": "Abbrechen",
     "edit": "Bearbeiten",
+    "loading": "Zeitstrahl wird geladen...",
     "events": {
       "portfolio": {
         "title": "Portfolio-Launch",
         "description": "Mein Portfolio-Projekt ist live!"
       },
-    "loading": "Zeitstrahl wird geladen...",
-    "add": "Hinzufügen",
+      "tournament": {
         "title": "Schachturnier",
         "description": "Teilnahme an einem Lichess-Blitzturnier."
       },
