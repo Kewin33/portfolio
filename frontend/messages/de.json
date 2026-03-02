@@ -25,6 +25,7 @@
     "save": "Speichern",
     "cancel": "Abbrechen",
     "edit": "Bearbeiten",
+    "softDelete": "Soft-Löschen",
     "loading": "Zeitstrahl wird geladen...",
     "events": {
       "portfolio": {
