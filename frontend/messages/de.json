@@ -1,7 +1,15 @@
 {
   "Index": {
     "title": "Willkommen zu meinem Portfolio",
-    "description": "Ich bin Informatik-Student, Entwickler, Schachspieler und Musiker."
+    "description": "Ich bin Informatik-Student, Entwickler, Schachspieler und Musiker.",
+    "hello": "Hey, my name is",
+    "rolePrefix": "I'm a",
+    "roles": "CS Student, Developer, Chess Player, Musician",
+    "projects": "Projects",
+    "projectTitle": "Depictor",
+    "projectDesc": "Open-source web app for controlling 2D pen plotters with a modern UI, real-time plotting progress and image-to-drawing workflow.",
+    "github": "GitHub",
+    "demo": "Demo"
   },
   "Navigation": {
     "home": "Startseite",
