@@ -22,6 +22,9 @@ export default async function LocaleLayout({
  
   return (
     <html lang={locale}>
+      <head>
+        <link rel="icon" href="/favicon.png" />
+      </head>
       <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex min-h-screen">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Sidebar />
