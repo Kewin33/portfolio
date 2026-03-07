@@ -12,18 +12,10 @@ export default function AboutMeSection() {
   const t = useTranslations("Index.about");
   const aboutContent = t("content");
 
-  const diamondSparks = [
-    { right: "-28px", top: "-28px", size: 24, delay: 0 },
-    { right: "6px", top: "-12px", size: 10, delay: 0.4 },
-    { right: "36px", bottom: "-8px", size: 12, delay: 0.9 },
-    { left: "8px", bottom: "-18px", size: 14, delay: 0.2 },
-    { left: "-20px", top: "6px", size: 10, delay: 1.1 },
-  ];
-
   return (
     <section
       id="about"
-      className="relative flex snap-start items-start bg-gradient-to-b from-slate-100 via-white to-blue-50 px-6 py-24 md:py-32 dark:from-slate-950 dark:via-slate-900 dark:to-teal-950 md:px-12 lg:px-12"
+      className="relative flex snap-start items-start bg-gradient-to-b from-slate-100 via-white to-blue-50 px-6 pt-[256px] pb-0 dark:from-slate-950 dark:via-slate-900 dark:to-teal-950 md:px-12 lg:px-12"
     >
       <div className="mx-auto grid w-full max-w-7xl items-center gap-20 md:gap-24 md:grid-cols-[minmax(220px,0.9fr)_minmax(0,1.8fr)] lg:grid-cols-[minmax(250px,1fr)_minmax(0,2.3fr)]">
         <motion.div
@@ -54,20 +46,39 @@ export default function AboutMeSection() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-teal-400/10 dark:from-blue-400/10 dark:to-teal-300/10" />
               </div>
 
-              {/* localized diamond sparks: placed outside the masked element so they are not clipped by the mask */}
-              {diamondSparks.map((s, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute pointer-events-none z-30"
-                  style={{ right: s.right, left: s.left, top: s.top, bottom: s.bottom, width: s.size, height: s.size }}
-                  initial={{ opacity: 0, scale: 0.8, y: 0 }}
-                  animate={{ opacity: [0, 0.45, 0], scale: [0.8, 1.2, 0.9], y: [0, -6, 0] }}
-                  transition={{ duration: 2.4 + (s.delay || 0), repeat: Infinity, delay: s.delay, ease: "easeInOut" }}
-                >
-                  <div className="absolute inset-0 rounded-full bg-blue-400/28 blur-[8px] dark:bg-white/20" />
-                  <div className="absolute inset-[34%] rounded-full bg-blue-500/65 dark:bg-white/70" />
-                </motion.div>
-              ))}
+              {/* subtle spark pulses around the diamond */}
+              <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden>
+                <defs>
+                  <filter id="blur" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" />
+                  </filter>
+                </defs>
+
+                <circle cx="18%" cy="6%" r="3" fill="rgba(59,130,246,0.9)" filter="url(#blur)">
+                  <animate attributeName="opacity" values="0;1;0" dur="2.2s" repeatCount="indefinite" begin="0s" />
+                  <animate attributeName="r" values="1;5;1" dur="2.2s" repeatCount="indefinite" begin="0s" />
+                </circle>
+
+                <circle cx="85%" cy="12%" r="2.5" fill="rgba(59,130,246,0.85)" filter="url(#blur)">
+                  <animate attributeName="opacity" values="0;1;0" dur="2.6s" repeatCount="indefinite" begin="0.3s" />
+                  <animate attributeName="r" values="1;6;1" dur="2.6s" repeatCount="indefinite" begin="0.3s" />
+                </circle>
+
+                <circle cx="92%" cy="62%" r="2" fill="rgba(96,165,250,0.8)" filter="url(#blur)">
+                  <animate attributeName="opacity" values="0;1;0" dur="3s" repeatCount="indefinite" begin="0.6s" />
+                  <animate attributeName="r" values="1;6;1" dur="3s" repeatCount="indefinite" begin="0.6s" />
+                </circle>
+
+                <circle cx="12%" cy="74%" r="2.5" fill="rgba(59,130,246,0.8)" filter="url(#blur)">
+                  <animate attributeName="opacity" values="0;1;0" dur="2.4s" repeatCount="indefinite" begin="0.9s" />
+                  <animate attributeName="r" values="1;5;1" dur="2.4s" repeatCount="indefinite" begin="0.9s" />
+                </circle>
+
+                <circle cx="50%" cy="-2%" r="2" fill="rgba(147,197,253,0.7)" filter="url(#blur)">
+                  <animate attributeName="opacity" values="0;0.8;0" dur="3.2s" repeatCount="indefinite" begin="1.1s" />
+                  <animate attributeName="r" values="1;7;1" dur="3.2s" repeatCount="indefinite" begin="1.1s" />
+                </circle>
+              </svg>
 
               {/* remove frame; use drop-shadow on mask for diamond glow */}
               {/* glow is handled via shadow on the outer masking div below */}
@@ -84,11 +95,7 @@ export default function AboutMeSection() {
         >
           <p className="mb-6 text-left text-[42px] leading-[1.05] font-bold text-blue-700 dark:text-teal-200">{t("eyebrow")}</p>
           <div className="mt-4 text-slate-700 dark:text-slate-200">
-            <MarkdownContent
-              content={aboutContent}
-              className="prose max-w-none dark:prose-invert"
-              pClassName="text-lg md:text-xl text-slate-700 dark:text-slate-200"
-            />
+            <MarkdownContent content={aboutContent} className="prose max-w-none dark:prose-invert" pClassName="text-lg md:text-xl" />
           </div>
         </motion.div>
       </div>
