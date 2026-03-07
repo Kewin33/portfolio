@@ -36,3 +36,4 @@ planning/
 # Next.js static
 # keep generated profile placeholder out of repo if present
 /public/profile-placeholder.png
+restored_backup/
