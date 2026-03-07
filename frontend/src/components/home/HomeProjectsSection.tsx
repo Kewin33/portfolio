@@ -16,7 +16,7 @@ export default function HomeProjectsSection({ projects }: HomeProjectsSectionPro
     <section id="projects" className="relative flex snap-start items-center justify-center bg-gradient-to-b from-blue-50 via-slate-100 to-slate-200 px-6 py-24 md:py-32 dark:from-teal-950 dark:via-teal-900 dark:to-slate-950 md:px-12 lg:px-12">
       <div className="mx-auto w-full max-w-7xl">
         <div>
-          <h2 className="mb-8 text-left text-[42px] leading-[1.05] font-bold text-blue-700 dark:text-teal-200">{t("projects")}</h2>
+          <h2 className="mb-24 text-left text-[42px] leading-[1.05] font-bold text-blue-700 dark:text-teal-200">{t("projects")}</h2>
         </div>
 
         <div>

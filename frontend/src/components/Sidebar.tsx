@@ -16,6 +16,7 @@ export default function Sidebar() {
   const navItems = [
     { name: t('home'), path: '/', icon: <Home size={24} /> },
     { name: t('timeline'), path: '/timeline', icon: <BookOpen size={24} />, requiredRole: 'friend' },
+    { name: t('cv'), path: '/cv', icon: <BookOpen size={24} /> },
     { name: t('chess'), path: '/chess', icon: <Target size={24} />, adminOnly: true },
     { name: t('music'), path: '/music', icon: <Music size={24} />, adminOnly: true },
     { name: t('studies'), path: '/studies', icon: <BookOpen size={24} />, adminOnly: true },

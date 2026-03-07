@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 
 import Timeline, { TimelineEvent } from "../../../components/timeline/Timeline";
 import Tag from '@/components/timeline/Tag';
-import TagSelect from '@/components/timeline/TagSelect';
+import FilterBar from '@/components/timeline/FilterBar';
+import useTimelineData from '@/hooks/useTimelineData';
 
 type StoredTimelineEvent = TimelineEvent & {
   id?: string;
@@ -56,16 +57,24 @@ export default function TimelinePage() {
       description: t("events.studies.description")
     }
   ], [t]);
-  const [events, setEvents] = useState<StoredTimelineEvent[]>([]);
-  const [availableTags, setAvailableTags] = useState<{ tag: string; count: number; color?: string | null }[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [tagColors, setTagColors] = useState<Record<string, string | null>>({});
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
   const [formEvent, setFormEvent] = useState<TimelineEvent>(emptyEvent);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [zoomPercent, setZoomPercent] = useState(0.001);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const {
+    events,
+    setEvents,
+    availableTags,
+    setAvailableTags,
+    tagColors,
+    setTagColors,
+    isAdmin,
+    isLoading,
+    fetchEvents,
+    fetchTagsList
+  } = useTimelineData(defaultEvents, [selectedTags]);
 
   const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
@@ -80,92 +89,6 @@ export default function TimelinePage() {
     const base: Record<string, string> = { ...(extra ?? {}) };
     if (token) base.Authorization = `Bearer ${token}`;
     return base;
-  };
-
-  const fetchEvents = useCallback(async () => {
-    try {
-      const url = new URL(`${apiBase}/api/storage/timeline/events`);
-      // Admin users should receive soft-deleted events so they can restore them
-      if (isAdmin) {
-        url.searchParams.set("include_deleted", "true");
-      }
-      if (selectedTags.length) url.searchParams.set('tags', selectedTags.join(','));
-      const response = await fetch(url.toString(), { cache: "no-store" });
-      if (!response.ok) throw new Error("fetch failed");
-      const data = await response.json();
-      const serverEvents = (data.events ?? []) as StoredTimelineEvent[];
-      const serverTagColors = (data.tagColors ?? {}) as Record<string, string | null>;
-      if (serverEvents.length > 0) {
-        setEvents(serverEvents);
-        setTagColors(serverTagColors);
-        return;
-      }
-
-      const initPayload = {
-        events: defaultEvents.map((event) => ({ ...event, deletedAt: null }))
-      };
-      const initResponse = await fetch(`${apiBase}/api/storage/timeline/events`, {
-        method: "PUT",
-        headers: _authHeaders({ "Content-Type": "application/json" }),
-        body: JSON.stringify(initPayload)
-      });
-      if (initResponse.ok) {
-        const initData = await initResponse.json();
-        setEvents(initData.events ?? []);
-      } else {
-        setEvents(defaultEvents.map((event) => ({ ...event, deletedAt: null })));
-      }
-    } catch {
-      setEvents(defaultEvents.map((event) => ({ ...event, deletedAt: null })));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [apiBase, defaultEvents, selectedTags, isAdmin]);
-
-  useEffect(() => {
-    fetchEvents();
-    fetchTagsList();
-  }, [fetchEvents]);
-
-  // determine admin state from localStorage token/role
-  useEffect(() => {
-    const checkAdminServer = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          setIsAdmin(false);
-          return;
-        }
-        const res = await fetch(`${apiBase}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store' });
-        if (!res.ok) {
-          setIsAdmin(false);
-          return;
-        }
-        const data = await res.json();
-        setIsAdmin(data.role === 'admin');
-      } catch (e) {
-        setIsAdmin(false);
-      }
-    };
-
-    checkAdminServer();
-
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === 'token' || e.key === 'role') checkAdminServer();
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, []);
-
-  const fetchTagsList = async () => {
-    try {
-      const res = await fetch(`${apiBase}/api/storage/timeline/tags`, { cache: 'no-store' });
-      if (!res.ok) return setAvailableTags([]);
-      const data = await res.json();
-      setAvailableTags(data.tags || []);
-    } catch {
-      setAvailableTags([]);
-    }
   };
 
   const persistEvents = async (nextEvents: StoredTimelineEvent[]) => {
@@ -354,54 +277,15 @@ export default function TimelinePage() {
       className="relative w-full px-4 md:px-8 lg:px-12 py-8"
     >
       <h1 className="mt-16 text-3xl font-bold mb-6">{t("title")}</h1>
-      <div className="mb-4 flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-3">
-          <TagSelect
-            availableTags={availableTags}
-            selected={selectedTags}
-            onChange={(next) => setSelectedTags(next)}
-            onCreate={fetchTagsList}
-            placeholder={t("filterTags") ?? "Filter tags"}
-            allowCreate={true}
-          />
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600 dark:text-gray-300 min-w-16">{t("zoom")}</span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setZoomPercent(p => Math.max(0.001, p / 2))}
-              className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300"
-              aria-label="Zoom out"
-            >
-              −
-            </button>
-            <input
-              type="range"
-              // allow very large zoom-out values down to 0.001% (tiny fraction)
-              min={0.001}
-              max={220}
-              step={0.001}
-              value={zoomPercent}
-              onChange={(e) => setZoomPercent(Number(e.target.value))}
-              className="w-20 sm:w-28 md:w-32 lg:w-40"
-            />
-            <button
-              onClick={() => setZoomPercent(p => Math.min(220, p * 2))}
-              className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300"
-              aria-label="Zoom in"
-            >
-              +
-            </button>
-            <button
-              onClick={() => setZoomPercent(100)}
-              className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Reset
-            </button>
-          </div>
-          <span className="text-sm text-gray-500 w-24 text-right">{formatZoom(zoomPercent)}</span>
-        </div>
-      </div>
+      <FilterBar
+        availableTags={availableTags}
+        selected={selectedTags}
+        onChange={(next) => setSelectedTags(next)}
+        onCreate={fetchTagsList}
+        zoomPercent={zoomPercent}
+        setZoomPercent={setZoomPercent}
+        showZoom={true}
+      />
       <div className="w-full lg:pr-[26rem] overflow-x-auto hide-scrollbar pb-2">
         
         {isLoading ? (

@@ -27,6 +27,7 @@
   "Navigation": {
     "home": "Startseite",
     "timeline": "Zeitstrahl",
+    "cv": "CV",
     "chess": "Schach",
     "music": "Musik",
     "studies": "Studium",
@@ -134,5 +135,14 @@
     "title": "Anmeldung",
     "submit": "Absenden",
     "registerSuccess": "Registrierung eingegangen — bitte auf Freigabe warten."
+  }
+  ,
+  "CV": {
+    "title": "CV",
+    "education": "Ausbildung",
+    "projects": "Projekte",
+    "hardskills": "Hard Skills",
+    "awards": "Auszeichnungen",
+    "softskills": "Soft Skills"
   }
 }

@@ -15,7 +15,7 @@ export default function AboutMeSection() {
   return (
     <section
       id="about"
-      className="relative flex snap-start items-start bg-gradient-to-b from-slate-100 via-white to-blue-50 px-6 pt-[256px] pb-0 dark:from-slate-950 dark:via-slate-900 dark:to-teal-950 md:px-12 lg:px-12"
+      className="relative flex snap-start items-start bg-gradient-to-b from-slate-100 via-white to-blue-50 px-6 pt-[256px] pb-0 dark:from-slate-950 dark:via-slate-900 dark:to-teal-950 md:px-12 lg:px-12 pb-42"
     >
       <div className="mx-auto grid w-full max-w-7xl items-center gap-20 md:gap-24 md:grid-cols-[minmax(220px,0.9fr)_minmax(0,1.8fr)] lg:grid-cols-[minmax(250px,1fr)_minmax(0,2.3fr)]">
         <motion.div

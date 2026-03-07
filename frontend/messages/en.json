@@ -27,6 +27,7 @@
   "Navigation": {
     "home": "Home",
     "timeline": "Timeline",
+    "cv": "CV",
     "chess": "Chess",
     "music": "Music",
     "studies": "Studies",
@@ -134,5 +135,14 @@
     "title": "Login",
     "submit": "Submit",
     "registerSuccess": "Registration submitted — please wait for approval."
+  }
+  ,
+  "CV": {
+    "title": "CV",
+    "education": "Education",
+    "projects": "Projects",
+    "hardskills": "Hard Skills",
+    "awards": "Awards",
+    "softskills": "Soft Skills"
   }
 }

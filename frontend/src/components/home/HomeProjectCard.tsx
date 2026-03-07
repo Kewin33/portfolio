@@ -71,7 +71,7 @@ export default function HomeProjectCard({ project, index }: HomeProjectCardProps
   }, [controls, inView]);
 
   return (
-    <motion.div ref={cardRef} initial={{ opacity: 0.18, scale: 0.86, y: 46 }} animate={controls} className="relative will-change-transform ml-6 md:ml-12 lg:ml-20 mr-auto max-w-[720px] px-3 md:px-4 lg:px-6">
+    <motion.div ref={cardRef} initial={{ opacity: 0.18, scale: 0.86, y: 46 }} animate={controls} className={`relative will-change-transform ml-6 md:ml-24 lg:ml-64 mr-auto max-w-[720px] px-3 md:px-4 lg:px-6 ${isEven ? "lg:-translate-x-8" : "lg:ml-128"}`}>
       <div className={`overflow-hidden rounded-xl border border-slate-300/60 bg-white shadow-xl shadow-slate-300/60 transform dark:border-teal-100/15 dark:bg-white/5 dark:shadow-black/25 ${isEven ? "lg:-translate-x-8" : "lg:translate-x-8"}`}>
         <div className="relative overflow-hidden rounded-t-xl shadow-[0_0_18px_rgba(59,130,246,0.06)] dark:shadow-none">
           {projectImage ? (
