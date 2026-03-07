@@ -1,13 +1,26 @@
 {
   "Index": {
     "title": "Welcome to my Portfolio",
-    "description": "I am a CS Student, Developer, Chess Player, and Musician.",
+    "shortTitle": "Building, experimenting, learning — repeat.",
     "hello": "Hey, my name is",
     "rolePrefix": "I'm a",
     "roles": "CS Student, Developer, Chess Player, Musician",
+    "shortBio": "Hey — I'm Alex. I'm a Computer Science student based in Munich, Germany. I'm passionate about creating and combining ideas and interests, and I enjoy finding creative, non‑trivial solutions to problems. Lately I focus on building web apps and exploring new machine‑learning techniques, mainly with PyTorch and Next.js. It's exciting how much there is to discover.",
+    "about": {
+      "eyebrow": "About Me",
+      "imageAlt": "Portrait of Alexander Chen",
+      "content": "# Building thoughtful digital experiences.\n\nHello! I'm Alexander Chen, a Computer Science student about to finish my bachelor's degree. I build thoughtful digital experiences—turning ideas into web apps, exploring AI projects, and extracting insight from data with Python. My work blends structured problem-solving with personal interests like chess and music. I enjoy taking concepts from prototype to product using tools such as React, Next.js, Git, Docker, and Linux. Curiosity drives me: I like experimenting, learning new technologies, and combining creativity with technical skill to solve problems in unexpected ways.",
+      "highlights": {
+        "student": "CS Student",
+        "fullstack": "Full-Stack Development",
+        "chess": "Chess & Strategy",
+        "music": "Music & Creativity"
+      }
+    },
     "projects": "Projects",
-    "projectTitle": "Depictor",
-    "projectDesc": "Open-source web app for controlling 2D pen plotters with a modern UI, real-time plotting progress and image-to-drawing workflow.",
+    "otherProjects": "Other Projects",
+    "projectTitle": "BallWatch",
+    "projectDesc": "Compares streaming services and finds the cheapest combination of providers for selected teams. Built with Next.js and Node.js.",
     "github": "GitHub",
     "demo": "Demo"
   },
@@ -18,7 +31,9 @@
     "music": "Music",
     "studies": "Studies",
     "sports": "Sports",
-    "hobbies": "Hobbies"
+    "hobbies": "Hobbies",
+    "lockedTitle": "Locked sections",
+    "lockedDescription": "These areas are still under development and are currently available to admins only."
   },
   "Timeline": {
     "title": "Timeline",
@@ -34,6 +49,13 @@
     "cancel": "Cancel",
     "edit": "Edit",
     "softDelete": "Soft Delete",
+    "deletedEvents": "Deleted events",
+    "restore": "Restore",
+    "deletePermanent": "Delete permanently",
+    "eventTags": "Event Tags",
+    "filterTags": "Filter tags",
+    "searchTitle": "Search by title",
+    "zoom": "Zoom",
     "loading": "Loading timeline...",
     "events": {
       "portfolio": {
@@ -68,7 +90,16 @@
       "freizeitDesc": "Tools and memories from chess camps"
     },
     "studyTitle": "Recent Study Example",
-    "studyPlaceholder": "Lichess Iframe Embed Placeholder"
+    "studyPlaceholder": "Lichess Iframe Embed Placeholder",
+    "boardTitle": "Interactive Analysis Board"
+  },
+  "Chess": {
+    "controls": "Board Controls",
+    "undo": "Undo Move",
+    "reset": "Reset Board",
+    "engine": "Stockfish Engine",
+    "playing": "Play Mode",
+    "setupMode": "Setup Mode"
   },
   "MusicPage": {
     "title": "Music",
@@ -97,5 +128,11 @@
       "fitness": "Fitness",
       "travel": "Travel"
     }
+  }
+  ,
+  "Login": {
+    "title": "Login",
+    "submit": "Submit",
+    "registerSuccess": "Registration submitted — please wait for approval."
   }
 }

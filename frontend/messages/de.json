@@ -1,13 +1,26 @@
 {
   "Index": {
     "title": "Willkommen zu meinem Portfolio",
-    "description": "Ich bin Informatik-Student, Entwickler, Schachspieler und Musiker.",
+    "shortTitle": "Bauen, Ausprobieren, Lernen — immer wieder.",
     "hello": "Hey, ich heiße",
-    "rolePrefix": "Ich bin",
+    "rolePrefix": "Ich bin ein",
     "roles": "Informatik-Student, Entwickler, Schachspieler, Musiker",
+    "shortBio": "Hey — ich bin Alex. Ich studiere Informatik und lebe derzeit in München. Ich liebe es, Ideen zu entwickeln und zu kombinieren und finde gern kreative, nicht-triviale Lösungen für Probleme. Zurzeit arbeite ich hauptsächlich an Web‑Apps und erforsche neue Methoden im Machine Learning, vor allem mit PyTorch und Next.js. Es ist spannend, wie viel es zu entdecken gibt.",
+    "about": {
+      "eyebrow": "Über mich",
+      "imageAlt": "Porträt von Alexander Chen",
+      "content": "# Ich entwickle durchdachte digitale Erlebnisse.\n\nHallo! Ich bin Alexander Chen, Informatikstudent und stehe kurz vor meinem Bachelorabschluss. Ich entwickle durchdachte digitale Erlebnisse: Ideen werden zu Web‑Apps, ich arbeite an KI‑Projekten und gewinne mit Python Erkenntnisse aus Daten. Meine Projekte verbinden strukturiertes Problemlösen mit persönlichen Interessen wie Schach und Musik; ich bringe Konzepte vom Prototypen bis zum fertigen Projekt und nutze dabei Werkzeuge wie React, Next.js, Git, Docker und Linux. Neugier treibt mich an — ich experimentiere gern, lerne neue Technologien und verbinde Kreativität mit technischem Können, um Probleme überraschend zu lösen.",
+      "highlights": {
+        "student": "Informatik-Student",
+        "fullstack": "Full-Stack-Entwicklung",
+        "chess": "Schach & Strategie",
+        "music": "Musik & Kreativität"
+      }
+    },
     "projects": "Projekte",
-    "projectTitle": "Depictor",
-    "projectDesc": "Open-Source-Webanwendung zur Steuerung von 2D-Stiftplottern mit moderner UI, Echtzeit-Plot-Fortschritt und Bild-zu-Zeichnung-Workflow.",
+    "otherProjects": "Weitere Projekte",
+    "projectTitle": "BallWatch",
+    "projectDesc": "Vergleicht Streaming-Dienste und findet die günstigste Kombination von Anbietern für gewünschte Teams. Erstellt mit Next.js und Node.js.",
     "github": "GitHub",
     "demo": "Demo"
   },
@@ -18,7 +31,9 @@
     "music": "Musik",
     "studies": "Studium",
     "sports": "Sport",
-    "hobbies": "Hobbies"
+    "hobbies": "Hobbies",
+    "lockedTitle": "Gesperrte Bereiche",
+    "lockedDescription": "Diese Bereiche sind noch in Entwicklung und aktuell nur für Admins freigeschaltet."
   },
   "Timeline": {
     "title": "Zeitstrahl",
@@ -34,6 +49,13 @@
     "cancel": "Abbrechen",
     "edit": "Bearbeiten",
     "softDelete": "Soft-Löschen",
+    "deletedEvents": "Gelöschte Ereignisse",
+    "restore": "Wiederherstellen",
+    "deletePermanent": "Endgültig löschen",
+    "eventTags": "Stichworte",
+    "filterTags": "Filter: Tags",
+    "searchTitle": "Nach Titel suchen",
+    "zoom": "Zoom",
     "loading": "Zeitstrahl wird geladen...",
     "events": {
       "portfolio": {
@@ -68,7 +90,16 @@
       "freizeitDesc": "Tools und Erinnerungen aus Schachcamps"
     },
     "studyTitle": "Aktuelles Studien-Beispiel",
-    "studyPlaceholder": "Lichess-Iframe-Platzhalter"
+    "studyPlaceholder": "Lichess-Iframe-Platzhalter",
+    "boardTitle": "Interaktives Analysebrett"
+  },
+  "Chess": {
+    "controls": "Brettsteuerung",
+    "undo": "Zug zurück",
+    "reset": "Brett zurücksetzen",
+    "engine": "Stockfish Engine",
+    "playing": "Spielmodus",
+    "setupMode": "Aufbaumodus"
   },
   "MusicPage": {
     "title": "Musik",
@@ -97,5 +128,11 @@
       "fitness": "Fitness",
       "travel": "Reisen"
     }
+  }
+  ,
+  "Login": {
+    "title": "Anmeldung",
+    "submit": "Absenden",
+    "registerSuccess": "Registrierung eingegangen — bitte auf Freigabe warten."
   }
 }

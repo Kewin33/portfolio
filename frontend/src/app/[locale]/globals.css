@@ -24,3 +24,71 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Utility to hide scrollbars while keeping scroll functionality */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+  width: 0;
+  height: 0;
+}
+
+.markdown-content {
+  line-height: 1.65;
+}
+
+.markdown-content > * + * {
+  margin-top: 0.75rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin-left: 1rem;
+}
+
+.markdown-content ul {
+  list-style: disc;
+}
+
+.markdown-content ol {
+  list-style: decimal;
+}
+
+.markdown-content pre {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  background: #e2e8f0;
+  padding: 0.875rem 1rem;
+}
+
+.dark .markdown-content pre {
+  background: #0f172a;
+}
+
+.markdown-content pre code {
+  display: block;
+  font-size: 0.875rem;
+  white-space: pre;
+}
+
+.markdown-content pre code[data-language]::before {
+  content: attr(data-language);
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  border-radius: 9999px;
+  background: #cbd5e1;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #334155;
+}
+
+.dark .markdown-content pre code[data-language]::before {
+  background: #1e293b;
+  color: #cbd5e1;
+}

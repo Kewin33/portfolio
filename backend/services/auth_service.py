@@ -4,6 +4,8 @@ from datetime import datetime, timedelta
 from typing import Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
+from fastapi import HTTPException, Header
+from typing import Optional
 
 SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-for-jwt")
 ALGORITHM = "HS256"
@@ -32,3 +34,18 @@ def verify_access_token(token: str):
         raise Exception("Token expired")
     except jwt.InvalidTokenError:
         raise Exception("Invalid token")
+
+
+def require_admin(authorization: Optional[str] = Header(None)) -> dict:
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization header")
+    if not authorization.lower().startswith("bearer "):
+        raise HTTPException(status_code=401, detail="Invalid Authorization header")
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = verify_access_token(token)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    if payload.get("role") != "admin" and payload.get("sub") != "admin":
+        raise HTTPException(status_code=403, detail="Admin role required")
+    return payload

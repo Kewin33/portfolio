@@ -4,330 +4,447 @@ import os
 import logging
 from typing import Any
 
-from google.oauth2.service_account import Credentials
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseUpload
 
 SCOPES = ["https://www.googleapis.com/auth/drive"]
-PORTFOLIO_FOLDER = "portfolio"
-TIMELINE_FOLDER = "timeline"
 TIMELINE_FILE = "timeline_events.json"
-
-
-logging.basicConfig(level=logging.DEBUG)
+TIMELINE_MIME = "application/json"
+USERS_FILE = "users.json"
 
 
 class DriveService:
     def __init__(self):
-        self.service = self._build_service()
-        self.timeline_folder_id_override = os.getenv("GOOGLE_DRIVE_TIMELINE_FOLDER_ID")
-        self.timeline_file_id_override = os.getenv("GOOGLE_DRIVE_TIMELINE_FILE_ID")
-        self.shared_root_folder_id = os.getenv("GOOGLE_DRIVE_SHARED_ROOT_FOLDER_ID")
-        self.portfolio_folder_id = None
-        if not self.timeline_folder_id_override and not self.timeline_file_id_override:
-            self.portfolio_folder_id = self._get_or_create_folder(
-                PORTFOLIO_FOLDER,
-                self.shared_root_folder_id,
+        self.token_path = os.getenv(
+            "GOOGLE_OAUTH_TOKEN_PATH",
+            os.path.join(os.path.dirname(__file__), "..", "..", "planning", "oauth_token.json"),
+        )
+        # support both the canonical env var and the older/alternate name used in .env.example
+        self.timeline_folder_id = (
+            os.getenv("GOOGLE_DRIVE_TIMELINE_FOLDER_ID")
+            or os.getenv("GOOGLE_DRIVE_PORTFOLIO_FOLDER_ID")
+            or ""
+        )
+        self.timeline_folder_id = self.timeline_folder_id.strip() or None
+        self.timeline_file_id = os.getenv("GOOGLE_DRIVE_TIMELINE_FILE_ID", "").strip() or None
+        # Projects folder id (can be set via env). If not set, a folder named "Projects" will be used/created.
+        self.projects_folder_id = os.getenv("GOOGLE_DRIVE_PROJECTS_FOLDER_ID", "").strip() or None
+        self.service = None
+
+    def ensure_service(self):
+        if self.service:
+            return
+        from pathlib import Path
+
+        token_raw = self.token_path
+        token_candidates = []
+        p = Path(token_raw)
+        if p.is_absolute():
+            token_candidates.append(p)
+        else:
+            token_candidates.append(Path(token_raw))
+            token_candidates.append(Path(os.getcwd()) / token_raw)
+            # check parent of cwd (project root when running from backend/)
+            token_candidates.append(Path(os.getcwd()).parent / token_raw)
+            # check repository root relative to this file (../../planning/...)
+            repo_root = Path(__file__).resolve().parents[2]
+            token_candidates.append(repo_root / token_raw)
+
+        found = None
+        debug_info = []
+        for c in token_candidates:
+            try:
+                exists = c.exists()
+            except Exception:
+                exists = False
+            debug_info.append(f"{str(c)} -> {exists}")
+            if exists and found is None:
+                found = c
+
+        #logging.getLogger(__name__).debug("ensure_service: token_path=%s cwd=%s candidates=%s", token_raw, os.getcwd(), debug_info)
+
+        if not found:
+            raise RuntimeError(
+                "OAuth token not found. Run /api/auth/drive/start and finish consent first."
             )
 
+        creds = Credentials.from_authorized_user_file(str(found), SCOPES)
+        self.service = build("drive", "v3", credentials=creds)
     def _build_service(self):
-        credentials_path = os.getenv("GOOGLE_DRIVE_CREDENTIALS_PATH")
-        candidates = [
-            credentials_path,
-            os.path.join(
-                os.path.dirname(__file__),
-                "..",
-                "..",
-                "planning",
-                "master-purpose-459609-m3-4f50d48eaae4.json",
-            ),
-            os.path.join(
-                os.path.dirname(__file__),
-                "..",
-                "..",
-                "planning",
-                "client_secret_336033174250-n7dc3gs96v5o9dmsiqjfuscf73umheki.apps.googleusercontent.com.json",
-            ),
-        ]
-        for candidate in candidates:
-            if candidate and os.path.exists(candidate):
-                creds = Credentials.from_service_account_file(candidate, scopes=SCOPES)
-                return build("drive", "v3", credentials=creds)
-        raise RuntimeError(
-            "No valid Google service account credentials found. "
-            "Set GOOGLE_DRIVE_CREDENTIALS_PATH to a service account JSON file."
-        )
+        # try to reuse the same resolution logic as ensure_service
+        try:
+            self.ensure_service()
+            return self.service
+        except RuntimeError:
+            raise
 
     def _execute(self, request):
         try:
             return request.execute()
         except HttpError as exc:
-            content = ""
-            if getattr(exc, "content", None):
-                content = exc.content.decode("utf-8", errors="ignore")
             status = getattr(getattr(exc, "resp", None), "status", None)
-            raise RuntimeError(
-                f"Google Drive API error (status={status}): {content}"
-            ) from exc
+            message = ""
+            if getattr(exc, "content", None):
+                message = exc.content.decode("utf-8", errors="ignore")
+            raise RuntimeError(f"Google Drive API error (status={status}): {message}") from exc
 
-    def _get_or_create_folder(self, folder_name: str, parent_id: str | None = None) -> str:
-        query = (
-            f"name = '{folder_name}' and mimeType = 'application/vnd.google-apps.folder' "
-            "and trashed = false"
-        )
-        if parent_id:
-            query += f" and '{parent_id}' in parents"
+    def _find_timeline_file(self) -> str | None:
+        if self.timeline_file_id:
+            return self.timeline_file_id
 
-        results = self._execute(
+        # ensure the Drive service / credentials are initialized
+        self.ensure_service()
+
+        conditions = [f"name = '{TIMELINE_FILE}'", "trashed = false"]
+        if self.timeline_folder_id:
+            conditions.append(f"'{self.timeline_folder_id}' in parents")
+        query = " and ".join(conditions)
+
+        result = self._execute(
             self.service.files().list(
                 q=query,
                 spaces="drive",
                 fields="files(id, name)",
                 includeItemsFromAllDrives=True,
                 supportsAllDrives=True,
+                pageSize=1,
             )
         )
-        items = results.get("files", [])
+        files = result.get("files", [])
+        return files[0]["id"] if files else None
 
-        if items:
-            return items[0]["id"]
+    # Generic helpers for JSON files stored in Drive
+    def _find_file_by_name(self, name: str) -> str | None:
+        if not name:
+            return None
+        # ensure the Drive service / credentials are initialized
+        self.ensure_service()
 
-        metadata = {
-            "name": folder_name,
-            "mimeType": "application/vnd.google-apps.folder",
-        }
-        if parent_id:
-            metadata["parents"] = [parent_id]
+        conditions = [f"name = '{name}'", "trashed = false"]
+        if self.timeline_folder_id:
+            conditions.append(f"'{self.timeline_folder_id}' in parents")
+        query = " and ".join(conditions)
 
-        created = self._execute(
-            self.service.files().create(
-                body=metadata,
-                fields="id",
-                supportsAllDrives=True,
-            )
-        )
-        return created["id"]
-
-    def _timeline_folder_id(self) -> str:
-        if self.timeline_folder_id_override:
-            return self.timeline_folder_id_override
-        return self._get_or_create_folder(TIMELINE_FOLDER, self.portfolio_folder_id)
-
-    def _find_file_in_folder(self, file_name: str, folder_id: str) -> dict[str, Any] | None:
-        query = f"name = '{file_name}' and '{folder_id}' in parents and trashed = false"
-        results = self._execute(
+        result = self._execute(
             self.service.files().list(
                 q=query,
                 spaces="drive",
-                fields="files(id, name, modifiedTime)",
+                fields="files(id, name)",
                 includeItemsFromAllDrives=True,
                 supportsAllDrives=True,
+                pageSize=1,
             )
         )
-        files = results.get("files", [])
-        return files[0] if files else None
+        files = result.get("files", [])
+        return files[0]["id"] if files else None
 
-    def _get_file_metadata(self, file_id: str) -> dict[str, Any]:
-        return self._execute(
-            self.service.files().get(
-                fileId=file_id,
-                fields="id,name,mimeType,size,description",
+    def _get_or_create_folder(self, folder_name: str, parent_id: str | None = None) -> str:
+        """Return folder id for folder_name; create if not exists.
+
+        If parent_id is provided, the folder will be searched/created under that parent.
+        """
+        if not folder_name:
+            raise RuntimeError("folder_name required")
+        # ensure service
+        self.ensure_service()
+        # search for folder (optionally under parent)
+        conditions = [f"name = '{folder_name}'", "mimeType = 'application/vnd.google-apps.folder'", "trashed = false"]
+        if parent_id:
+            conditions.append(f"'{parent_id}' in parents")
+        q = " and ".join(conditions)
+        res = self._execute(
+            self.service.files().list(
+                q=q,
+                spaces="drive",
+                fields="files(id, name)",
+                includeItemsFromAllDrives=True,
                 supportsAllDrives=True,
+                pageSize=1,
             )
         )
-
-    def _create_empty_timeline_file(self, folder_id: str) -> str:
-        metadata = {
-            "name": TIMELINE_FILE,
-            "parents": [folder_id],
-            "mimeType": "application/json",
-            "description": "[]",
-        }
+        files = res.get("files", [])
+        if files:
+            return files[0]["id"]
+        # create folder (optionally under parent)
+        metadata: dict[str, Any] = {"name": folder_name, "mimeType": "application/vnd.google-apps.folder"}
+        if parent_id:
+            metadata["parents"] = [parent_id]
         created = self._execute(
             self.service.files().create(
                 body=metadata,
-                fields="id",
+                fields="id,name",
                 supportsAllDrives=True,
             )
         )
         return created["id"]
 
-    def _read_events_from_metadata(self, file_id: str) -> list[dict[str, Any]]:
-        metadata = self._get_file_metadata(file_id)
-        description = (metadata.get("description") or "").strip()
-        if not description:
-            return []
-        parsed = json.loads(description)
-        return parsed if isinstance(parsed, list) else []
-
-    def _is_storage_quota_error(self, exc: RuntimeError) -> bool:
-        message = str(exc)
-        return "storageQuotaExceeded" in message or "Service Accounts do not have storage quota" in message
-
-    def _update_metadata_description(self, file_id: str, content: str) -> None:
-        self._execute(
-            self.service.files().update(
-                fileId=file_id,
-                body={"description": content},
-                fields="id",
-                supportsAllDrives=True,
-            )
-        )
-
-    def _download_text(self, file_id: str) -> str:
-        response = self._execute(
-            self.service.files().get_media(fileId=file_id, supportsAllDrives=True)
-        )
-        return response.decode("utf-8") if isinstance(response, bytes) else str(response)
-
-    def read_timeline_events(self) -> list[dict[str, Any]]:
-        existing = None
-        if self.timeline_file_id_override:
-            existing = {"id": self.timeline_file_id_override}
-        else:
-            folder_id = self._timeline_folder_id()
-            existing = self._find_file_in_folder(TIMELINE_FILE, folder_id)
-        if not existing:
-            return []
-
-        metadata_events: list[dict[str, Any]] | None = None
+    def read_json_file(self, name: str) -> Any:
+        if not name:
+            return None
+        file_id = self._find_file_by_name(name)
+        if not file_id:
+            return None
+        self.ensure_service()
         try:
-            metadata = self._get_file_metadata(existing["id"])
-            description = (metadata.get("description") or "").strip()
-            if description:
-                parsed_desc = json.loads(description)
-                if isinstance(parsed_desc, list):
-                    metadata_events = parsed_desc
-                    if parsed_desc:
-                        return parsed_desc
-        except Exception:
-            metadata_events = None
-
-        try:
-            content = self._download_text(existing["id"]).strip()
-            if not content:
-                return metadata_events or []
-            parsed = json.loads(content)
-            if isinstance(parsed, list):
-                return parsed
-            return metadata_events or []
-        except Exception:
-            return metadata_events or []
-
-    def write_timeline_events(self, events: list[dict[str, Any]]) -> str:
-        folder_id = None
-        if self.timeline_file_id_override:
-            existing = {"id": self.timeline_file_id_override}
-        else:
-            folder_id = self._timeline_folder_id()
-            existing = self._find_file_in_folder(TIMELINE_FILE, folder_id)
-            if not existing:
-                try:
-                    existing = {"id": self._create_empty_timeline_file(folder_id)}
-                except RuntimeError as exc:
-                    if not self._is_storage_quota_error(exc):
-                        raise
-
-        content = json.dumps(events, ensure_ascii=False, indent=2)
-        logging.debug("Uploading events: %s", content)
-        media = MediaIoBaseUpload(
-            io.BytesIO(content.encode("utf-8")),
-            mimetype="application/json",
-            resumable=False,
-        )
-
-        if existing:
-            try:
-                updated = self._execute(
-                    self.service.files().update(
-                        fileId=existing["id"],
-                        media_body=media,
-                        fields="id",
-                        supportsAllDrives=True,
-                    )
-                )
-                logging.debug("Updated file ID: %s", updated["id"])
-                try:
-                    self._update_metadata_description(existing["id"], content)
-                except Exception:
-                    pass
-                return updated["id"]
-            except RuntimeError as exc:
-                if not self._is_storage_quota_error(exc):
-                    raise
-                self._update_metadata_description(existing["id"], content)
-                return existing["id"]
-
-        metadata = {"name": TIMELINE_FILE, "parents": [folder_id]}
-        try:
-            created = self._execute(
-                self.service.files().create(
-                    body=metadata,
-                    media_body=media,
-                    fields="id",
+            content = self._execute(
+                self.service.files().get_media(
+                    fileId=file_id,
                     supportsAllDrives=True,
                 )
             )
-            logging.debug("Created file ID: %s", created["id"])
-            try:
-                self._update_metadata_description(created["id"], content)
-            except Exception:
-                pass
-            return created["id"]
+            text = content.decode("utf-8") if isinstance(content, bytes) else str(content)
+            if not text.strip():
+                return None
+            return json.loads(text)
         except RuntimeError as exc:
-            if not self._is_storage_quota_error(exc):
+            # fallback to description field
+            try:
+                meta = self._execute(
+                    self.service.files().get(
+                        fileId=file_id,
+                        fields="description",
+                        supportsAllDrives=True,
+                    )
+                )
+                desc = meta.get("description", "") or ""
+                if not desc.strip():
+                    return None
+                return json.loads(desc)
+            except Exception:
                 raise
-            fallback_file_id = self._create_empty_timeline_file(folder_id)
-            self._update_metadata_description(fallback_file_id, content)
-            logging.debug("Fallback file ID: %s", fallback_file_id)
-            return fallback_file_id
 
-    def list_files(self, subfolder: str = "") -> list[dict[str, Any]]:
-        if not self.portfolio_folder_id:
-            return []
+    def write_json_file(self, name: str, data: Any) -> str:
+        if not name:
+            raise RuntimeError("name is required")
+        # find or create
+        file_id = self._find_file_by_name(name)
+        payload = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+        media = MediaIoBaseUpload(io.BytesIO(payload), mimetype=TIMELINE_MIME, resumable=False)
 
-        parent_id = self.portfolio_folder_id
-        if subfolder:
-            parent_id = self._get_or_create_folder(subfolder, parent_id)
+        if not file_id:
+            metadata: dict[str, Any] = {
+                "name": name,
+                "mimeType": TIMELINE_MIME,
+            }
+            if self.timeline_folder_id:
+                metadata["parents"] = [self.timeline_folder_id]
+            self.ensure_service()
+            created = self._execute(
+                self.service.files().create(
+                    body=metadata,
+                    media_body=MediaIoBaseUpload(io.BytesIO(payload), mimetype=TIMELINE_MIME, resumable=False),
+                    fields="id,size,modifiedTime",
+                    supportsAllDrives=True,
+                )
+            )
+            self.timeline_file_id = created["id"]
+            return created["id"]
 
-        query = f"'{parent_id}' in parents and trashed = false"
-        results = self._execute(
-            self.service.files().list(
-                q=query,
-                spaces="drive",
-                fields="files(id, name, mimeType)",
-                includeItemsFromAllDrives=True,
+        # update existing
+        self.ensure_service()
+        updated = self._execute(
+            self.service.files().update(
+                fileId=file_id,
+                media_body=media,
+                fields="id,size,modifiedTime",
                 supportsAllDrives=True,
             )
         )
-        return results.get("files", [])
+        return updated["id"]
 
-    def upload_file(
-        self,
-        filename: str,
-        content: bytes,
-        mime_type: str,
-        subfolder: str = "",
-    ) -> str:
-        if not self.portfolio_folder_id:
-            raise RuntimeError(
-                "upload_file requires portfolio folder mode. "
-                "Set GOOGLE_DRIVE_TIMELINE_FOLDER_ID/FILE_ID only for timeline endpoints."
-            )
+    def _create_timeline_file(self) -> str:
+        metadata: dict[str, Any] = {
+            "name": TIMELINE_FILE,
+            "mimeType": TIMELINE_MIME,
+        }
+        if self.timeline_folder_id:
+            metadata["parents"] = [self.timeline_folder_id]
 
-        parent_id = self.portfolio_folder_id
-        if subfolder:
-            parent_id = self._get_or_create_folder(subfolder, parent_id)
-
-        metadata = {"name": filename, "parents": [parent_id]}
-        media = MediaIoBaseUpload(io.BytesIO(content), mimetype=mime_type, resumable=False)
-        uploaded = self._execute(
+        self.ensure_service()
+        created = self._execute(
             self.service.files().create(
                 body=metadata,
-                media_body=media,
+                media_body=MediaIoBaseUpload(
+                    io.BytesIO(b"[]"),
+                    mimetype=TIMELINE_MIME,
+                    resumable=False,
+                ),
                 fields="id",
                 supportsAllDrives=True,
             )
         )
-        return uploaded["id"]
+        return created["id"]
+
+    def _get_or_create_timeline_file(self) -> str:
+        existing = self._find_timeline_file()
+        if existing:
+            # if the existing file is not owned by the currently authenticated user,
+            # create a new file owned by the OAuth user to avoid service-account quota issues
+            try:
+                self.ensure_service()
+                info = self._execute(
+                    self.service.files().get(
+                        fileId=existing,
+                        fields="owners(emailAddress)",
+                        supportsAllDrives=True,
+                    )
+                )
+                owners = info.get("owners", []) or []
+                # get authenticated user's email
+                about = self._execute(self.service.about().get(fields="user"))
+                user_email = about.get("user", {}).get("emailAddress")
+                owner_emails = [o.get("emailAddress") for o in owners if o.get("emailAddress")]
+                if user_email and user_email not in owner_emails:
+                    #logging.getLogger(__name__).debug("timeline file %s not owned by %s, creating new file", existing, user_email)
+                    return self._create_timeline_file()
+            except Exception:
+                # if any metadata check fails, fall back to using the existing file id
+                pass
+            return existing
+        return self._create_timeline_file()
+
+    def read_timeline_events(self) -> list[dict[str, Any]]:
+        file_id = self._find_timeline_file()
+        if not file_id:
+            return []
+        self.ensure_service()
+        try:
+            content = self._execute(
+                self.service.files().get_media(
+                    fileId=file_id,
+                    supportsAllDrives=True,
+                )
+            )
+            text = content.decode("utf-8") if isinstance(content, bytes) else str(content)
+            if not text.strip():
+                return []
+
+            parsed = json.loads(text)
+            if not isinstance(parsed, list):
+                raise RuntimeError("Timeline file content is not a JSON array")
+            return parsed
+        except RuntimeError as exc:
+            msg = str(exc)
+            if "storageQuotaExceeded" in msg or "Service Accounts do not have storage quota" in msg:
+                # fallback: read JSON from file description metadata
+                meta = self._execute(
+                    self.service.files().get(
+                        fileId=file_id,
+                        fields="description",
+                        supportsAllDrives=True,
+                    )
+                )
+                desc = meta.get("description", "") or ""
+                if not desc.strip():
+                    return []
+                parsed = json.loads(desc)
+                if not isinstance(parsed, list):
+                    raise RuntimeError("Timeline description content is not a JSON array")
+                return parsed
+            raise
+
+    def write_timeline_events(self, events: list[dict[str, Any]]) -> str:
+        file_id = self._get_or_create_timeline_file()
+        payload = json.dumps(events, ensure_ascii=False, indent=2).encode("utf-8")
+        media = MediaIoBaseUpload(io.BytesIO(payload), mimetype=TIMELINE_MIME, resumable=False)
+
+        self.ensure_service()
+        try:
+            updated = self._execute(
+                self.service.files().update(
+                    fileId=file_id,
+                    media_body=media,
+                    fields="id,size,modifiedTime",
+                    supportsAllDrives=True,
+                )
+            )
+        except RuntimeError as exc:
+            msg = str(exc)
+            if "storageQuotaExceeded" in msg or "Service Accounts do not have storage quota" in msg:
+                # try creating a new file owned by the OAuth user; if that fails, fallback to description
+                metadata: dict[str, Any] = {"name": TIMELINE_FILE, "mimeType": TIMELINE_MIME}
+                if self.timeline_folder_id:
+                    metadata["parents"] = [self.timeline_folder_id]
+
+                try:
+                    created = self._execute(
+                        self.service.files().create(
+                            body=metadata,
+                            media_body=MediaIoBaseUpload(io.BytesIO(payload), mimetype=TIMELINE_MIME, resumable=False),
+                            fields="id,size,modifiedTime",
+                            supportsAllDrives=True,
+                        )
+                    )
+                    updated = created
+                except RuntimeError:
+                    # fallback to storing JSON in the file description
+                    payload_text = payload.decode("utf-8")
+                    updated = self._execute(
+                        self.service.files().update(
+                            fileId=file_id,
+                            body={"description": payload_text},
+                            fields="id,size,modifiedTime,description",
+                            supportsAllDrives=True,
+                        )
+                    )
+            else:
+                raise
+        self.timeline_file_id = updated["id"]
+        return updated["id"]
+
+    def upload_image(self, data: bytes, filename: str, mime_type: str = "image/jpeg") -> dict:
+        """Upload an image to Google Drive, make it publicly readable, and return its URL + file_id."""
+        self.ensure_service()
+        metadata: dict[str, Any] = {"name": filename}
+        # Put project images into Projects folder under the portfolio/timeline folder if possible
+        projects_parent = None
+        if self.projects_folder_id:
+            projects_parent = self.projects_folder_id
+        else:
+            try:
+                # prefer creating Projects under the configured timeline/portfolio folder
+                projects_parent = self._get_or_create_folder("Projects", parent_id=self.timeline_folder_id)
+            except Exception:
+                # fallback: try creating Projects at root
+                try:
+                    projects_parent = self._get_or_create_folder("Projects")
+                except Exception:
+                    projects_parent = None
+        if projects_parent:
+            metadata["parents"] = [projects_parent]
+
+        media = MediaIoBaseUpload(io.BytesIO(data), mimetype=mime_type, resumable=False)
+        created = self._execute(
+            self.service.files().create(
+                body=metadata,
+                media_body=media,
+                fields="id,name",
+                supportsAllDrives=True,
+            )
+        )
+        file_id = created["id"]
+
+        # Make the file publicly readable
+        try:
+            self._execute(
+                self.service.permissions().create(
+                    fileId=file_id,
+                    body={"type": "anyone", "role": "reader"},
+                    supportsAllDrives=True,
+                )
+            )
+        except Exception:
+            pass  # best effort – image may still be accessible via token
+
+        public_url = f"https://drive.google.com/uc?export=view&id={file_id}"
+        return {"file_id": file_id, "url": public_url, "name": filename}
+
+    def get_storage_quota(self) -> dict[str, Any]:
+        self.ensure_service()
+        info = self._execute(self.service.about().get(fields="storageQuota,user"))
+        return {
+            "user": info.get("user", {}),
+            "storageQuota": info.get("storageQuota", {}),
+        }

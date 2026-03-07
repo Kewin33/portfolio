@@ -14,11 +14,11 @@ export default async function LocaleLayout({
 }) {
   const {locale} = await params;
 
-  if (typeof locale !== 'string' || !routing.locales.includes(locale)) {
+  if (typeof locale !== 'string' || !routing.locales.includes(locale as any)) {
     notFound();
   }
  
-  const messages = await getMessages({locale});
+  const messages = await getMessages({locale: locale as any});
  
   return (
     <html lang={locale}>

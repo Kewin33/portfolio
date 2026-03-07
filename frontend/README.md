@@ -34,3 +34,25 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+## Download new tech icons
+```{shell}
+$downloads = @(
+  # --- Neue Einträge ---
+  @{ Url = 'https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg'; File = 'frontend/public/tech/java.svg' },
+  @{ Url = 'https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/googledrive.svg'; File = 'frontend/public/tech/googledrive.svg' }
+)
+
+$results = foreach ($item in $downloads) {
+  try {
+    Invoke-WebRequest -Uri $item.Url -OutFile $item.File -ErrorAction Stop
+    [PSCustomObject]@{ file = $item.File; status = 'ok'; url = $item.Url }
+  }
+  catch {
+    [PSCustomObject]@{ file = $item.File; status = 'failed'; url = $item.Url; error = $_.Exception.Message }
+  }
+}
+
+$results | Format-Table -AutoSize | Out-String
+```

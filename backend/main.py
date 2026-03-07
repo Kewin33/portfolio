@@ -1,9 +1,11 @@
 import os
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from routers import storage, auth
+from routers import storage, auth, drive_oauth
+from routers import users, projects
 
 
 def _load_env_file(file_path: Path) -> None:
@@ -24,7 +26,13 @@ backend_dir = Path(__file__).resolve().parent
 _load_env_file(backend_dir / ".env")
 _load_env_file(backend_dir / ".env.example")
 
-app = FastAPI(title="Portfolio Backend")
+# Keep runtime logs readable (suppress noisy third-party DEBUG output)
+logging.basicConfig(level=logging.INFO, force=True)
+logging.getLogger("googleapiclient.discovery").setLevel(logging.WARNING)
+logging.getLogger("googleapiclient.discovery_cache").setLevel(logging.WARNING)
+logging.getLogger("google_auth_httplib2").setLevel(logging.WARNING)
+
+app = FastAPI(title="Portfolio Backend", redirect_slashes=False)
 
 app.add_middleware(
     CORSMiddleware,
@@ -36,6 +44,9 @@ app.add_middleware(
 
 app.include_router(storage.router, prefix="/api/storage", tags=["Storage"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
+app.include_router(drive_oauth.router, prefix="/api", tags=["Drive OAuth"])
+app.include_router(users.router, prefix="/api/users", tags=["Users"])
+app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])
 
 @app.get("/")
 def root():

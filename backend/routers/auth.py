@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from services.auth_service import verify_google_token, create_access_token
+from services.auth_service import verify_access_token
+from fastapi import Header
 
 router = APIRouter()
 
@@ -27,12 +29,30 @@ class AdminLoginRequest(BaseModel):
 @router.post("/admin")
 async def admin_login(req: AdminLoginRequest):
     import os
-    admin_password = os.getenv("ADMIN_PASSWORD", "changeme")
-    
+    admin_password = os.getenv("ADMIN_PASSWORD", "alexistcool")
+
     if req.password != admin_password:
         raise HTTPException(status_code=401, detail="Invalid password")
-    
+
     return {
         "access_token": create_access_token({"sub": "admin", "role": "admin"}),
         "token_type": "bearer",
     }
+
+
+@router.get("/me")
+async def me(authorization: str | None = Header(None)):
+    """Return decoded token payload for the current user. Requires Authorization: Bearer <token>."""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Missing Authorization header")
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        raise HTTPException(status_code=401, detail="Invalid Authorization header")
+    token = parts[1]
+    try:
+        payload = verify_access_token(token)
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+    # Return safe subset
+    return {"email": payload.get("sub"), "role": payload.get("role")}
