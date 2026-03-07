@@ -31,6 +31,7 @@ dist/
 
 # secrets
 planning/
+.github/copilot-instructions.md
 
 # Next.js static
 # keep generated profile placeholder out of repo if present
