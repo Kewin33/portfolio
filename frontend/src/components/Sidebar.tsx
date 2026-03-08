@@ -132,7 +132,7 @@ export default function Sidebar() {
                 </button>
               </div>
 
-              <nav className="flex-1 flex flex-col gap-4">
+              <nav className="flex-1 flex flex-col gap-4 overflow-y-auto hide-scrollbar">
                 {navItems.map((item, i) => (
                   (item as any).requiredRole && role && ((role !== 'admin' && role !== 'global' && role !== (item as any).requiredRole)) ? null : (
                   <motion.div
