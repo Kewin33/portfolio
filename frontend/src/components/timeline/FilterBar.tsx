@@ -40,7 +40,7 @@ export default function FilterBar({ availableTags, selected, onChange, onCreate,
           <span className="text-sm text-gray-600 dark:text-gray-300 min-w-16">{t('zoom') ?? 'Zoom'}</span>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setZoomPercent(p => Math.max(0.0001, (typeof p === 'number' ? p : p(0)) / 2))}
+              onClick={() => setZoomPercent(p => Math.max(0.0001, p / 2))}
               className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300"
               aria-label="Zoom out"
             >
@@ -56,7 +56,7 @@ export default function FilterBar({ availableTags, selected, onChange, onCreate,
               className="w-20 sm:w-28 md:w-32 lg:w-40"
             />
             <button
-              onClick={() => setZoomPercent(p => Math.min(25, (typeof p === 'number' ? p : p(0)) * 2))}
+              onClick={() => setZoomPercent(p => Math.min(25, p * 2))}
               className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300"
               aria-label="Zoom in"
             >
