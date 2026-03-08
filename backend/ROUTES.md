@@ -163,6 +163,7 @@ Hinweis: Standard-Events (DEFAULT_TIMELINE_EVENTS) werden erzeugt, falls keine E
   - `GLOBAL_PASSWORD` – Passwort für `/global` Token
   - `GOOGLE_OAUTH_REDIRECT_URI` – Redirect URI für Google OAuth
   - `GOOGLE_OAUTH_TOKEN_PATH` – Pfad, wo OAuth-Credentials gespeichert werden (default: `planning/oauth_token.json`)
+  - `GOOGLE_OAUTH_TOKEN_JSON` – Alternativ: komplettes `authorized_user`-JSON als ENV (wenn gesetzt, wird dieses verwendet statt der Token-Datei)
 
 ---
 

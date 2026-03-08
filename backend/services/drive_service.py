@@ -17,10 +17,9 @@ USERS_FILE = "users.json"
 
 class DriveService:
     def __init__(self):
-        self.token_path = os.getenv(
-            "GOOGLE_OAUTH_TOKEN_PATH",
-            os.path.join(os.path.dirname(__file__), "..", "..", "planning", "oauth_token.json"),
-        )
+        # Use the entire authorized-user JSON from env (no filesystem fallback)
+        # Set `GOOGLE_OAUTH_TOKEN_JSON` to the full JSON string in production (e.g. Render).
+        self.token_json = os.getenv("GOOGLE_OAUTH_TOKEN_JSON", "").strip() or None
         # support both the canonical env var and the older/alternate name used in .env.example
         self.timeline_folder_id = (
             os.getenv("GOOGLE_DRIVE_TIMELINE_FOLDER_ID")
@@ -36,42 +35,18 @@ class DriveService:
     def ensure_service(self):
         if self.service:
             return
-        from pathlib import Path
-
-        token_raw = self.token_path
-        token_candidates = []
-        p = Path(token_raw)
-        if p.is_absolute():
-            token_candidates.append(p)
-        else:
-            token_candidates.append(Path(token_raw))
-            token_candidates.append(Path(os.getcwd()) / token_raw)
-            # check parent of cwd (project root when running from backend/)
-            token_candidates.append(Path(os.getcwd()).parent / token_raw)
-            # check repository root relative to this file (../../planning/...)
-            repo_root = Path(__file__).resolve().parents[2]
-            token_candidates.append(repo_root / token_raw)
-
-        found = None
-        debug_info = []
-        for c in token_candidates:
-            try:
-                exists = c.exists()
-            except Exception:
-                exists = False
-            debug_info.append(f"{str(c)} -> {exists}")
-            if exists and found is None:
-                found = c
-
-        #logging.getLogger(__name__).debug("ensure_service: token_path=%s cwd=%s candidates=%s", token_raw, os.getcwd(), debug_info)
-
-        if not found:
+        # Require the token JSON in env; no file-based fallback anymore
+        if not self.token_json:
             raise RuntimeError(
-                "OAuth token not found. Run /api/auth/drive/start and finish consent first."
+                "GOOGLE_OAUTH_TOKEN_JSON not set. Please set the authorized-user JSON in the environment."
             )
-
-        creds = Credentials.from_authorized_user_file(str(found), SCOPES)
-        self.service = build("drive", "v3", credentials=creds)
+        try:
+            info = json.loads(self.token_json)
+            creds = Credentials.from_authorized_user_info(info, SCOPES)
+            self.service = build("drive", "v3", credentials=creds)
+        except Exception as exc:
+            logging.getLogger(__name__).exception("Failed to load credentials from GOOGLE_OAUTH_TOKEN_JSON")
+            raise RuntimeError("Failed to load credentials from GOOGLE_OAUTH_TOKEN_JSON") from exc
     def _build_service(self):
         # try to reuse the same resolution logic as ensure_service
         try:
