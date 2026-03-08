@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
-import { TimelineEvent } from "@/components/timeline/Timeline";
+import type { TimelineEvent } from "@/components/timeline/Timeline";
 
 type StoredTimelineEvent = TimelineEvent & { id?: string; deletedAt?: string | null };
 
-export default function useTimelineData(defaultEvents: TimelineEvent[] = [], deps: any[] = []) {
+export default function useTimelineData(defaultEvents: TimelineEvent[] = [], tags: string[] = [], deps: any[] = []) {
   const [events, setEvents] = useState<StoredTimelineEvent[]>([]);
   const [availableTags, setAvailableTags] = useState<{ tag: string; count: number; color?: string | null }[]>([]);
   const [tagColors, setTagColors] = useState<Record<string, string | null>>({});
@@ -34,6 +34,13 @@ export default function useTimelineData(defaultEvents: TimelineEvent[] = [], dep
     setIsLoading(true);
     try {
       const url = new URL(`${apiBase}/api/storage/timeline/events`);
+      if (tags && tags.length) {
+        url.searchParams.set('tags', tags.join(','));
+      }
+      // if running as admin, backend can return soft-deleted events when requested
+      if (isAdmin) {
+        url.searchParams.set('include_deleted', 'true');
+      }
       const response = await fetch(url.toString(), { cache: 'no-store' });
       if (!response.ok) throw new Error('fetch failed');
       const data = await response.json();
@@ -50,7 +57,7 @@ export default function useTimelineData(defaultEvents: TimelineEvent[] = [], dep
     } finally {
       setIsLoading(false);
     }
-  }, [apiBase, defaultEvents]);
+  }, [apiBase, defaultEvents, tags, isAdmin]);
 
   useEffect(() => {
     const checkAdminServer = async () => {
@@ -81,7 +88,7 @@ export default function useTimelineData(defaultEvents: TimelineEvent[] = [], dep
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
     // deps allow callers to trigger refetch
-  }, [fetchEvents, fetchTagsList, apiBase, ...(deps || [])]);
+  }, [fetchEvents, fetchTagsList, apiBase, ...(deps || []), tags]);
 
   return {
     events,

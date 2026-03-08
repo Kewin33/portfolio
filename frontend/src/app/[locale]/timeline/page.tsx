@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 
 import Timeline, { TimelineEvent } from "../../../components/timeline/Timeline";
 import Tag from '@/components/timeline/Tag';
+import TagSelect from '@/components/timeline/TagSelect';
 import FilterBar from '@/components/timeline/FilterBar';
 import useTimelineData from '@/hooks/useTimelineData';
 
@@ -74,7 +75,7 @@ export default function TimelinePage() {
     isLoading,
     fetchEvents,
     fetchTagsList
-  } = useTimelineData(defaultEvents, [selectedTags]);
+  } = useTimelineData(defaultEvents, selectedTags, [selectedTags]);
 
   const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
@@ -292,7 +293,16 @@ export default function TimelinePage() {
           <div className="text-gray-500 dark:text-gray-400">{t("loading")}</div>
         ) : (
           <Timeline
-            events={activeEventEntries.map(({ event }) => event)}
+            events={
+              activeEventEntries
+                .map(({ event }) => event)
+                .filter((ev) => {
+                  if (!selectedTags || !selectedTags.length) return true;
+                  const evTags = ev.tags || [];
+                  // show event if it has any of the selected tags
+                  return evTags.some((t) => selectedTags.includes(t));
+                })
+            }
             tagColors={tagColors}
             zoom={zoomPercent / 100}
           />

@@ -25,9 +25,10 @@ export default function CVPage() {
 
   const defaultEvents = useMemo<TimelineEvent[]>(() => [], []);
 
-  const { events, tagColors, isLoading } = useTimelineData(defaultEvents, []);
-
   const activeTag = tabToTagMap[active];
+
+  const { events, tagColors, isLoading } = useTimelineData(defaultEvents, [activeTag], [activeTag]);
+
   const filtered = (events || []).filter(ev => (ev.tags || []).includes(activeTag) && !ev.deletedAt);
   const timelineEvents = filtered.length > 0 ? filtered : (events || []).filter(ev => !ev.deletedAt);
 
@@ -58,7 +59,7 @@ export default function CVPage() {
         {isLoading ? (
           <div className="text-gray-500 dark:text-gray-400">{tt('loading') ?? 'Loading timeline...'}</div>
         ) : (
-          <Timeline events={timelineEvents} tagColors={tagColors} zoom={Math.max(0.0001, zoomPercent / 100)} />
+          <Timeline events={timelineEvents} tagColors={tagColors} />
         )}
       </div>
     </motion.div>

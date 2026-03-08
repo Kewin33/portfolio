@@ -17,8 +17,14 @@ interface TimelineProps {
   zoom?: number;
 }
 
-const YEAR_LABEL_THRESHOLD = 0.10; // zoom <= 10% -> show years
-const COMPACT_THRESHOLD = 0.50; // zoom <= 50% -> compact event rendering
+// Zoom is expressed as fraction (1 = 100%).
+// Requested ranges are percentages: min 0.0001% .. max 25%, default 0.001%
+// Convert percentages to fractions: 0.0001% == 0.000001, 0.001% == 0.00001
+const MIN_ZOOM = 0.000001; // 0.0001%
+const MAX_ZOOM = 0.25;     // 25%
+// Thresholds adapted for the very small default zoom scale
+const YEAR_LABEL_THRESHOLD = 0.0001; // 0.01% -> show years when zoom is extremely small
+const COMPACT_THRESHOLD = 0.0005;    // 0.05% -> compact rendering when zoom is very small
 
 function getTimelineRange(events: TimelineEvent[]) {
   const dates = events.flatMap(e => [new Date(e.start).getTime(), new Date(e.end).getTime()]);
@@ -27,7 +33,7 @@ function getTimelineRange(events: TimelineEvent[]) {
   return { min, max };
 }
 
-export default function Timeline({ events, tagColors, zoom = 1 }: TimelineProps) {
+export default function Timeline({ events, tagColors, zoom = 0.00001 }: TimelineProps) {
   if (events.length === 0) {
     return <div className="text-gray-400 text-center">No events yet.</div>;
   }
@@ -46,7 +52,11 @@ export default function Timeline({ events, tagColors, zoom = 1 }: TimelineProps)
   });
   const dayMs = 24 * 60 * 60 * 1000;
   const totalDays = Math.max(1, Math.ceil(total / dayMs));
-  const axisHeight = Math.max(760, totalDays * 12 * zoom);
+  // clamp zoom to allowed range and use `z` for all calculations
+  const z = Math.min(Math.max(zoom ?? 0.001, MIN_ZOOM), MAX_ZOOM);
+  const compact = z <= COMPACT_THRESHOLD;
+
+  const axisHeight = Math.max(760, totalDays * 12 * z);
   const topPadding = 40;
   const bottomPadding = 80;
   const drawableHeight = axisHeight - topPadding - bottomPadding;
@@ -84,7 +94,7 @@ export default function Timeline({ events, tagColors, zoom = 1 }: TimelineProps)
     "#f43f5e"  // red
   ];
 
-  const compact = (zoom ?? 1) <= COMPACT_THRESHOLD;
+  
 
   const [hovered, setHovered] = useState<number | null>(null);
   const elementRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -140,7 +150,7 @@ export default function Timeline({ events, tagColors, zoom = 1 }: TimelineProps)
       {(() => {
         const months: { time: number; label: string }[] = [];
         // if zoom is very small (<= YEAR_LABEL_THRESHOLD) show year labels instead of months
-        if ((zoom ?? 1) <= YEAR_LABEL_THRESHOLD) {
+        if (z <= YEAR_LABEL_THRESHOLD) {
           const startYear = new Date(min).getFullYear();
           const endYear = new Date(max).getFullYear();
           for (let y = startYear; y <= endYear; y++) {

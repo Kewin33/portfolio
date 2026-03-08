@@ -10,7 +10,7 @@ interface Props {
   onChange: (next: string[]) => void;
   onCreate?: () => void;
   zoomPercent: number;
-  setZoomPercent: (v: number | ((p: number) => number)) => void;
+  setZoomPercent: React.Dispatch<React.SetStateAction<number>>;
   showZoom?: boolean;
 }
 
@@ -40,7 +40,7 @@ export default function FilterBar({ availableTags, selected, onChange, onCreate,
           <span className="text-sm text-gray-600 dark:text-gray-300 min-w-16">{t('zoom') ?? 'Zoom'}</span>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setZoomPercent(p => Math.max(0.001, (typeof p === 'number' ? p : p(0)) / 2))}
+              onClick={() => setZoomPercent(p => Math.max(0.0001, (typeof p === 'number' ? p : p(0)) / 2))}
               className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300"
               aria-label="Zoom out"
             >
@@ -48,22 +48,22 @@ export default function FilterBar({ availableTags, selected, onChange, onCreate,
             </button>
             <input
               type="range"
-              min={0.001}
-              max={220}
-              step={0.001}
+              min={0.0001}
+              max={25}
+              step={0.0001}
               value={zoomPercent}
               onChange={(e) => setZoomPercent(Number(e.target.value))}
               className="w-20 sm:w-28 md:w-32 lg:w-40"
             />
             <button
-              onClick={() => setZoomPercent(p => Math.min(220, (typeof p === 'number' ? p : p(0)) * 2))}
+              onClick={() => setZoomPercent(p => Math.min(25, (typeof p === 'number' ? p : p(0)) * 2))}
               className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300"
               aria-label="Zoom in"
             >
               +
             </button>
             <button
-              onClick={() => setZoomPercent(100)}
+              onClick={() => setZoomPercent(0.001)}
               className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
               Reset
