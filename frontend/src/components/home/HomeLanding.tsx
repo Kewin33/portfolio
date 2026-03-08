@@ -61,7 +61,7 @@ export default function HomeLanding() {
 
   useEffect(() => {
     // load projects from backend (Drive)
-    const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || '';
+    const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || '';
     fetch(`${API_BASE}/api/projects/`)
       .then(r => r.json())
       .then(j => setProjects(j.projects || []))
@@ -70,7 +70,7 @@ export default function HomeLanding() {
 
   useEffect(() => {
     // Resolve Drive folder links into the first file and proxy Drive file URLs via backend
-    const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || '';
+    const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || '';
     async function resolveFolders() {
       let changed = false;
       const updated = await Promise.all(projects.map(async (p) => {

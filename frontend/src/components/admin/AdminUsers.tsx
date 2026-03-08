@@ -7,7 +7,7 @@ type Project = { id: string; title: string; description?: string; image?: string
 
 export default function AdminUsers() {
   const [token] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''));
-  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || '';
+  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || '';
 
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);

@@ -18,7 +18,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
     try {
-      const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || 'http://localhost:8000';
+      const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || 'http://localhost:8000';
       let res;
       if (mode === 'register') {
         res = await fetch(`${API_BASE}/api/users/register`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email, password, name}) });

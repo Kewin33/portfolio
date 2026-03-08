@@ -9,7 +9,7 @@ import type { Project } from "./projectTypes";
 
 export default function AdminProjects() {
   const [token] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''));
-  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || '';
+  const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || '';
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
