@@ -4,6 +4,7 @@ import {routing} from '@/i18n/routing';
 import {notFound} from 'next/navigation';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
+import Footer from '@/components/Footer';
 
 export default async function LocaleLayout({
   children,
@@ -29,8 +30,9 @@ export default async function LocaleLayout({
       <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex min-h-screen">
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Sidebar />
-          <main className="flex-1 w-full relative h-screen overflow-y-auto">
-            {children}
+          <main className="flex-1 w-full relative min-h-screen flex flex-col overflow-y-auto">
+            <div className="flex-1">{children}</div>
+            <Footer />
           </main>
         </NextIntlClientProvider>
       </body>

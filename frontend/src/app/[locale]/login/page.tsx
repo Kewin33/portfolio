@@ -17,10 +17,17 @@ export default function LoginPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    function isValidEmail(v: string) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    }
     try {
       const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || 'http://localhost:8000';
       let res;
       if (mode === 'register') {
+        if (!isValidEmail(email)) {
+          setError('Invalid email address');
+          return;
+        }
         res = await fetch(`${API_BASE}/api/users/register`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email, password, name}) });
       } else if (mode === 'admin') {
         res = await fetch(`${API_BASE}/api/auth/admin`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({password}) });

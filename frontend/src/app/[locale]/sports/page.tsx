@@ -1,12 +1,14 @@
 "use client";
 
 import PageLayout from '@/components/PageLayout';
+import AuthGuard from '@/components/AuthGuard';
 import { useTranslations } from 'next-intl';
 
 export default function SportsPage() {
   const t = useTranslations('SportsPage');
 
   return (
+    <AuthGuard adminOnly>
     <PageLayout title={t('title')} subtitle={t('subtitle')}>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {[1,2,3,4,5,6].map(i => (
@@ -16,5 +18,6 @@ export default function SportsPage() {
         ))}
       </div>
     </PageLayout>
+    </AuthGuard>
   );
 }

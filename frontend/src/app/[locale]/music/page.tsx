@@ -1,12 +1,14 @@
 "use client";
 
 import PageLayout from '@/components/PageLayout';
+import AuthGuard from '@/components/AuthGuard';
 import { useTranslations } from 'next-intl';
 
 export default function MusicPage() {
   const t = useTranslations('MusicPage');
 
   return (
+    <AuthGuard adminOnly>
     <PageLayout title={t('title')} subtitle={t('subtitle')}>
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 shadow-sm border border-slate-200 dark:border-slate-700">
         <h2 className="text-xl font-semibold mb-4">{t('playerTitle')}</h2>
@@ -15,5 +17,6 @@ export default function MusicPage() {
         </div>
       </div>
     </PageLayout>
+    </AuthGuard>
   );
 }

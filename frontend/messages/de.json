@@ -1,15 +1,14 @@
 {
   "Index": {
     "title": "Willkommen zu meinem Portfolio",
-    "shortTitle": "Bauen, Ausprobieren, Lernen — again.",
     "hello": "Hey, ich heiße",
     "rolePrefix": "Ich bin ein",
     "roles": "Informatik-Student, Entwickler, Schachspieler, Musiker",
-    "shortBio": "Hey, ich bin Alex. Ich bin Informatik-Student, aktuell in München. Ich brenne fürs Erschaffen und Bauen und dafür, Ideen und Interessen miteinander zu kombinieren. Ich mag es, kreativ zu denken und non-triviale Lösungen für meine Probleme zu finden :) Heutzutage arbeite ich hauptsächlich an Web-Apps oder neuen Machine-Learning-Technologien, primär mit PyTorch oder Next.js. Es ist interessant, wie viele Dinge es da draußen gibt!",  
     "about": {
       "eyebrow": "Über mich",
+      "shortTitle": "# Bauen, Ausprobieren, Lernen — repeat.",
       "imageAlt": "Porträt von Alexander Chen",
-      "content": "# Bauen, Ausprobieren, Lernen — again.\n\nHallo! Ich bin Alexander Chen, Informatikstudent und stehe kurz vor meinem Bachelorabschluss. Ich entwickle digitale Produkte, erstelle Prototypen für Machine‑Learning‑Experimente und gewinne mit Python Erkenntnisse aus Daten. Meine Projekte verbinden strukturiertes Problemlösen mit persönlichen Interessen wie Schach und Musik. Ich bringe Konzepte vom Prototypen bis zum fertigen Produkt und nutze dabei Werkzeuge wie React, Next.js, Git, Docker und Linux. Neugier treibt mich an: Ich experimentiere, lerne und kombiniere Ideen, um nicht‑triviale Probleme zu lösen.",
+      "shortBio": "Hey, ich bin Alex. Ich bin Informatik-Student, aktuell in München. Ich brenne fürs Erschaffen und Bauen und dafür, Ideen und Interessen miteinander zu kombinieren. Ich mag es, kreativ zu denken und non-triviale Lösungen für meine Probleme zu finden :) \n Heutzutage arbeite ich hauptsächlich an Web-Apps oder neuen Machine-Learning-Technologien, primär mit PyTorch oder Next.js. Es ist interessant, wie viele Dinge es da draußen gibt!",  
       "highlights": {
         "student": "Informatik-Student",
         "fullstack": "Full-Stack-Entwicklung",
@@ -19,8 +18,7 @@
     },
     "projects": "Projekte",
     "otherProjects": "Weitere Projekte",
-    "projectTitle": "BallWatch",
-    "projectDesc": "Vergleicht Streaming-Dienste und findet die günstigste Kombination von Anbietern für gewünschte Teams. Erstellt mit Next.js und Node.js.",
+    "otherProjectsNote": "Kleiner Hinweis: Das Portfolio ist noch im Aufbau — hier sind noch nicht alle Projekte. Ich werde nach und nach mehr hinzufügen.",
     "github": "GitHub",
     "demo": "Demo"
   },

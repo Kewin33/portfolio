@@ -10,7 +10,7 @@ import MarkdownContent from "../content/MarkdownContent";
 
 export default function AboutMeSection() {
   const t = useTranslations("Index.about");
-  const aboutContent = t("content");
+  const aboutContent = t("shortTitle") + "\n\n" + t("shortBio");
 
   return (
     <section
@@ -28,8 +28,6 @@ export default function AboutMeSection() {
           <div className="relative w-full max-w-[260px] md:max-w-[300px] lg:max-w-[340px] xl:max-w-[380px]">
             {/* diamond-shaped border: rotate parent 45deg, rotate image back -45deg */}
             <div className="mx-auto aspect-square w-full relative">
-              {/* glow removed; image mask only below */}
-
               {/* image masked by emoji diamond shape */}
               <div
                 className="absolute inset-0 overflow-hidden"
@@ -39,11 +37,12 @@ export default function AboutMeSection() {
                   maskRepeat: "no-repeat",
                   maskSize: "contain",
                   maskPosition: "center",
-                  zIndex: 10
+                  zIndex: 10,
+                  boxShadow: '0 20px 50px rgba(59,130,246,0.22), 0 8px 24px rgba(6,95,70,0.06)'
                 }}
               >
-                <Image src="/hero-profile.png" alt={t("imageAlt")} fill className="object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/10 via-transparent to-teal-400/10 dark:from-blue-400/10 dark:to-teal-300/10" />
+                {/*<Image src="/hero-profile.png" alt={t("imageAlt")} fill className="object-cover" />*/}
+                <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/80 to-teal-500/60 dark:from-blue-600/70 dark:to-teal-500/60" />
               </div>
 
               {/* subtle spark pulses around the diamond */}

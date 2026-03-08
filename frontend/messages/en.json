@@ -1,15 +1,14 @@
 {
   "Index": {
     "title": "Welcome to my Portfolio",
-    "shortTitle": "Building, experimenting, learning — repeat.",
     "hello": "Hey, my name is",
     "rolePrefix": "I'm a",
     "roles": "CS Student, Developer, Chess Player, Musician",
-    "shortBio": "Hey, I am Alex. I'm a Computer Science student currently based in Munich, Germany. I'm passionate about creating, building, and combining ideas and interests. I like to think creatively and find non-trivial solutions to my problems :) These days, I primarily like to work on web apps or new machine learning technologies, mainly using PyTorch or Next.js. It's interesting how many things there are out there!",
     "about": {
       "eyebrow": "About Me",
+      "shortTitle": "# Building, experimenting, learning — repeat.",
+      "shortBio": "Hey, I am Alex. I'm a Computer Science student currently based in Munich, Germany. I'm passionate about creating, building, and combining ideas and interests. I like to think creatively and find non-trivial solutions to my problems :) \n These days, I primarily like to work on web apps or new machine learning technologies, mainly using PyTorch or Next.js. It's interesting how many things there are out there!",
       "imageAlt": "Portrait of Alexander Chen",
-      "content": "# Building, experimenting, learning — repeat.\n\nHello! I'm Alexander Chen, a Computer Science student finishing my bachelor's degree. I build digital products, prototype machine‑learning experiments, and extract insights from data using Python. My projects combine structured problem‑solving with personal interests like chess and music. I take concepts from prototype to product using tools such as React, Next.js, Git, Docker, and Linux. Curiosity drives me: I experiment, learn, and combine ideas to solve non‑trivial problems.",
       "highlights": {
         "student": "CS Student",
         "fullstack": "Full-Stack Development",
@@ -19,8 +18,7 @@
     },
     "projects": "Projects",
     "otherProjects": "Other Projects",
-    "projectTitle": "BallWatch",
-    "projectDesc": "Compares streaming services and finds the cheapest combination of providers for selected teams. Built with Next.js and Node.js.",
+    "otherProjectsNote": "Quick note: The portfolio is still a work in progress — not all projects are listed yet. I'll be adding more over time.",
     "github": "GitHub",
     "demo": "Demo"
   },

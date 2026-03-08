@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 
 import Timeline, { TimelineEvent } from "../../../components/timeline/Timeline";
+import AuthGuard from '@/components/AuthGuard';
 import Tag from '@/components/timeline/Tag';
 import TagSelect from '@/components/timeline/TagSelect';
 import FilterBar from '@/components/timeline/FilterBar';
@@ -271,6 +272,7 @@ export default function TimelinePage() {
   };
 
   return (
+    <AuthGuard adminOnly>
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -466,5 +468,6 @@ export default function TimelinePage() {
         </div>
       )}
     </motion.div>
+    </AuthGuard>
   );
 }

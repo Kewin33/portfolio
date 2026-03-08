@@ -98,19 +98,28 @@ export default function AdminUsers() {
 function UserRow({ user, onApprove, onDelete, onUpdate }: { user: User; onApprove: () => void; onDelete: () => void; onUpdate: (patch: Partial<User>) => void }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user.name || '');
+  const [email, setEmail] = useState(user.email || '');
 
   return (
     <div className="p-3 border rounded flex justify-between items-center">
       <div>
         <div className="font-semibold">{user.email} <span className="text-sm text-gray-500">{user.role || ''}</span></div>
         {!editing ? <div className="text-sm text-gray-600">{user.name || ''}</div> : (
-          <input value={name} onChange={e => setName(e.target.value)} className="border rounded px-2 py-1 text-sm" />
+          <div className="flex flex-col gap-2">
+            <input value={name} onChange={e => setName(e.target.value)} className="border rounded px-2 py-1 text-sm" />
+            <input value={email} onChange={e => setEmail(e.target.value)} className="border rounded px-2 py-1 text-sm" />
+          </div>
         )}
       </div>
       <div className="flex gap-2">
         {user.role === 'pending' && <button onClick={onApprove} className="px-2 py-1 bg-green-600 text-white rounded">Approve</button>}
         {!editing && <button onClick={() => { setEditing(true); setName(user.name || ''); }} className="px-2 py-1 bg-yellow-400 text-white rounded">Edit</button>}
-        {editing && <button onClick={() => { onUpdate({ name }); setEditing(false); }} className="px-2 py-1 bg-blue-600 text-white rounded">Save</button>}
+        {editing && <button onClick={() => {
+            const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+            if (!isValidEmail(email)) { alert('Invalid email'); return; }
+            onUpdate({ name, email });
+            setEditing(false);
+          }} className="px-2 py-1 bg-blue-600 text-white rounded">Save</button>}
         {editing && <button onClick={() => setEditing(false)} className="px-2 py-1 bg-gray-200 rounded">Cancel</button>}
         <button onClick={onDelete} className="px-2 py-1 bg-red-600 text-white rounded">Delete</button>
       </div>

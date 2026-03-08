@@ -7,15 +7,15 @@ import { motion } from "framer-motion";
 import Timeline, { TimelineEvent } from "../../../components/timeline/Timeline";
 import useTimelineData from '@/hooks/useTimelineData';
 
-const TAB_KEYS = ["education", "projects", "hardskills", "awards", "softskills"] as const;
+const TAB_KEYS = ["education", "projects", /*"hardskills",*/ "awards", "softskills"] as const;
 type TabKey = typeof TAB_KEYS[number];
 
 const tabToTagMap: Record<TabKey, string> = {
-  education: 'education',
-  projects: 'project',
-  hardskills: 'hardskill',
-  awards: 'award',
-  softskills: 'softskill'
+  education: 'Education',
+  projects: 'Project',
+  //hardskills: 'Hard Skill',
+  awards: 'Awards',
+  softskills: 'Soft Skills'
 };
 
 export default function CVPage() {
@@ -26,9 +26,7 @@ export default function CVPage() {
   const defaultEvents = useMemo<TimelineEvent[]>(() => [], []);
 
   const activeTag = tabToTagMap[active];
-
   const { events, tagColors, isLoading } = useTimelineData(defaultEvents, [activeTag], [activeTag]);
-
   const filtered = (events || []).filter(ev => (ev.tags || []).includes(activeTag) && !ev.deletedAt);
   const timelineEvents = filtered.length > 0 ? filtered : (events || []).filter(ev => !ev.deletedAt);
 
@@ -59,7 +57,11 @@ export default function CVPage() {
         {isLoading ? (
           <div className="text-gray-500 dark:text-gray-400">{tt('loading') ?? 'Loading timeline...'}</div>
         ) : (
-          <Timeline events={timelineEvents} tagColors={tagColors} />
+          <Timeline
+              events={timelineEvents}
+              tagColors={tagColors}
+              zoom={0.001 / 100} // match Timeline page's percent->fraction convention
+            />
         )}
       </div>
     </motion.div>

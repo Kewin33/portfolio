@@ -1,6 +1,7 @@
 "use client";
 
 import PageLayout from '@/components/PageLayout';
+import AuthGuard from '@/components/AuthGuard';
 import { motion } from 'framer-motion';
 import { Link } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
@@ -19,6 +20,7 @@ export default function ChessPage() {
   ];
 
   return (
+    <AuthGuard adminOnly>
     <PageLayout title={t('title')} subtitle={t('subtitle')}>
       <div className="flex flex-col gap-12">
         <section className="bg-white/50 dark:bg-slate-900/50 rounded-3xl p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -65,6 +67,7 @@ export default function ChessPage() {
         </div>
       </div>
     </PageLayout>
+    </AuthGuard>
   );
 }
 

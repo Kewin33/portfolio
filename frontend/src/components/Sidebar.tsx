@@ -15,8 +15,8 @@ export default function Sidebar() {
   
   const navItems = [
     { name: t('home'), path: '/', icon: <Home size={24} /> },
-    { name: t('timeline'), path: '/timeline', icon: <BookOpen size={24} />, requiredRole: 'friend' },
     { name: t('cv'), path: '/cv', icon: <BookOpen size={24} /> },
+    { name: t('timeline'), path: '/timeline', icon: <BookOpen size={24} />, adminOnly: true },
     { name: t('chess'), path: '/chess', icon: <Target size={24} />, adminOnly: true },
     { name: t('music'), path: '/music', icon: <Music size={24} />, adminOnly: true },
     { name: t('studies'), path: '/studies', icon: <BookOpen size={24} />, adminOnly: true },
@@ -119,7 +119,7 @@ export default function Sidebar() {
             >
               <div className="flex justify-between items-center mb-12">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Alex Chen</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">My portfolio</h2>
                   {role && (
                     <div className="text-sm text-gray-600 dark:text-gray-400">Role: {role}</div>
                   )}

@@ -24,7 +24,7 @@ const MIN_ZOOM = 0.000001; // 0.0001%
 const MAX_ZOOM = 0.25;     // 25%
 // Thresholds adapted for the very small default zoom scale
 const YEAR_LABEL_THRESHOLD = 0.1; // 10% -> show years when zoom is extremely small
-const COMPACT_THRESHOLD = 0.0005;    // 0.05% -> compact rendering when zoom is very small
+const COMPACT_THRESHOLD = 0.08;    // 8% -> compact rendering when zoom is very small
 
 function getTimelineRange(events: TimelineEvent[]) {
   const dates = events.flatMap(e => [new Date(e.start).getTime(), new Date(e.end).getTime()]);
