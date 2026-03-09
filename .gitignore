@@ -37,3 +37,5 @@ planning/
 # keep generated profile placeholder out of repo if present
 /public/profile-placeholder.png
 restored_backup/
+.vercel
+.env*.local

@@ -20,11 +20,15 @@ export default async function LocaleLayout({
   }
  
   const messages = await getMessages({locale: locale as any});
+  const siteTitle = 'Alexander Chen — Portfolio';
+  const siteDescription = 'Portfolio of Alexander Chen';
  
   return (
     <html lang={locale}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{siteTitle}</title>
+        <meta name="description" content={siteDescription} />
         <link rel="icon" href="/favicon.png" />
       </head>
       <body className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex min-h-screen">

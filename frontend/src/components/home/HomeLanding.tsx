@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { toProjectImageSrc } from "@/utils/projectImages";
 import AboutMeSection from "@/components/home/AboutMeSection";
 import HomeHeroSection from "@/components/home/HomeHeroSection";
+import HomeProjectsLoading from "@/components/home/HomeProjectsLoading";
 import HomeProjectsSection from "@/components/home/HomeProjectsSection";
 import HomeOtherProjectsSection from "@/components/home/HomeOtherProjectsSection";
 import type { HomeProject } from "@/components/home/homeTypes";
@@ -22,6 +23,8 @@ export default function HomeLanding() {
   const [adminRole, setAdminRole] = useState<string | null>(null);
   const [projects, setProjects] = useState<HomeProject[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [showRenderCooldown, setShowRenderCooldown] = useState(false);
 
 
   useEffect(() => {
@@ -62,10 +65,27 @@ export default function HomeLanding() {
   useEffect(() => {
     // load projects from backend (Drive)
     const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || '';
+    let cooldownTimer: number | undefined;
+    setLoadingProjects(true);
+    setShowRenderCooldown(false);
+    // If loading takes longer than 5s, show Render cooldown hint
+    if (typeof window !== 'undefined') {
+      cooldownTimer = window.setTimeout(() => setShowRenderCooldown(true), 5000);
+    }
+
     fetch(`${API_BASE}/api/projects/`)
       .then(r => r.json())
       .then(j => setProjects(j.projects || []))
-      .catch(() => setProjects([]));
+      .catch(() => setProjects([]))
+      .finally(() => {
+        if (typeof window !== 'undefined' && cooldownTimer) window.clearTimeout(cooldownTimer);
+        setShowRenderCooldown(false);
+        setLoadingProjects(false);
+      });
+
+    return () => {
+      if (typeof window !== 'undefined' && cooldownTimer) window.clearTimeout(cooldownTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -109,8 +129,14 @@ export default function HomeLanding() {
       <div className="relative z-20">
         <HomeHeroSection typedText={typedText} locale={locale} mounted={mounted} adminRole={adminRole} />
         <AboutMeSection />
-        <HomeProjectsSection projects={projects} />
-        <HomeOtherProjectsSection projects={projects} />
+        {loadingProjects ? (
+          <HomeProjectsLoading showRenderCooldown={showRenderCooldown} />
+        ) : (
+          <>
+            <HomeProjectsSection projects={projects} />
+            <HomeOtherProjectsSection projects={projects} />
+          </>
+        )}
       </div>
     </div>
   );

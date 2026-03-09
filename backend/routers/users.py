@@ -43,9 +43,13 @@ async def register(payload: RegisterPayload):
         users = drive.read_json_file(USERS_FILENAME) or []
     except Exception:
         users = []
+    # validate email format
+    if not _is_valid_email(payload.email):
+        raise HTTPException(status_code=400, detail="Invalid email")
 
+    # ensure uniqueness
     for u in users:
-        if u.get("email") == payload.email:
+        if (u.get("email") or "").lower() == payload.email.lower():
             raise HTTPException(status_code=409, detail="User already exists")
 
     user = {
@@ -107,18 +111,25 @@ async def approve(email: str, _: Any = Depends(require_admin)):
     return {"ok": True}
 
 
-@router.patch("/{email}")
-async def update_user(email: str, payload: dict, _: Any = Depends(require_admin)):
-    """Update user fields (admin only). Accepts JSON body with fields to update, e.g. {"name": "New Name", "role": "friend"}."""
+@router.patch("/{identifier}")
+async def update_user(identifier: str, payload: dict, _: Any = Depends(require_admin)):
+    """Update user fields (admin only). Accepts JSON body with fields to update, e.g. {"name": "New Name", "role": "friend"}. `identifier` may be a user id or email."""
     drive = _get_drive()
-    if not _is_valid_email(email):
-        raise HTTPException(status_code=400, detail="Invalid email")
     users = drive.read_json_file(USERS_FILENAME) or []
     changed = False
     updated_user = None
     for u in users:
-        if u.get("email") == email:
-            # Only allow updating specific fields
+        if u.get("email") == identifier or u.get("id") == identifier:
+            # Allow updating specific fields including email and name/role
+            if "email" in payload:
+                new_email = payload.get("email") or ""
+                if not _is_valid_email(new_email):
+                    raise HTTPException(status_code=400, detail="Invalid new email")
+                # ensure no other user uses this email
+                for other in users:
+                    if other is not u and (other.get("email") or "").lower() == new_email.lower():
+                        raise HTTPException(status_code=409, detail="Email already in use")
+                u["email"] = new_email
             for k in ("name", "role"):
                 if k in payload:
                     u[k] = payload[k]
@@ -132,15 +143,14 @@ async def update_user(email: str, payload: dict, _: Any = Depends(require_admin)
     return {"ok": True, "user": sanitized}
 
 
-@router.delete("/{email}")
-async def delete_user(email: str, _: Any = Depends(require_admin)):
-    """Delete a user by email (admin only)."""
+@router.delete("/{identifier}")
+async def delete_user(identifier: str, _: Any = Depends(require_admin)):
+    """Delete a user by id or email (admin only). Does not validate the identifier as an email."""
     drive = _get_drive()
-    if not _is_valid_email(email):
-        raise HTTPException(status_code=400, detail="Invalid email")
     users = drive.read_json_file(USERS_FILENAME) or []
     before = len(users)
-    users = [u for u in users if u.get("email") != email]
+    # allow deleting by either user id or email; do not require email-format validation
+    users = [u for u in users if not (u.get("email") == identifier or u.get("id") == identifier)]
     if len(users) == before:
         raise HTTPException(status_code=404, detail="User not found")
     drive.write_json_file(USERS_FILENAME, users)

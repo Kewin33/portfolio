@@ -17,6 +17,10 @@
       }
     },
     "projects": "Projects",
+    "projectLoading": {
+      "title": "Loading projects...",
+      "renderCooldown": "This is taking longer than usual. It is likely the Render cooldown, and waking up can take around 30 seconds."
+    },
     "otherProjects": "Other Projects",
     "otherProjectsNote": "Quick note: The portfolio is still a work in progress — not all projects are listed yet. I'll be adding more over time.",
     "github": "GitHub",

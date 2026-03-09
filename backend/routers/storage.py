@@ -45,6 +45,11 @@ def get_drive_service() -> DriveService:
     return _drive_service
 
 
+def reset_drive_service() -> None:
+    global _drive_service
+    _drive_service = None
+
+
 class TimelineEventPayload(BaseModel):
     id: Optional[str] = None
     title: str
@@ -70,9 +75,9 @@ class TagCreatePayload(BaseModel):
 
 
 def _tags_meta_path() -> Path:
-    # planning/timeline_tags.json at repository root
+    # timeline_tags.json stored inside backend for versioned deployment
     repo_root = Path(__file__).resolve().parents[1]
-    return repo_root / ".." / "planning" / "timeline_tags.json"
+    return repo_root / "data" / "timeline_tags.json"
 
 
 def _backup_timeline_path() -> Path:

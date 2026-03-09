@@ -17,6 +17,10 @@
       }
     },
     "projects": "Projekte",
+    "projectLoading": {
+      "title": "Projekte werden geladen...",
+      "renderCooldown": "Das dauert gerade etwas länger. Wahrscheinlich ist das der Render-Cooldown, das Aufwachen kann etwa 30 Sekunden brauchen."
+    },
     "otherProjects": "Weitere Projekte",
     "otherProjectsNote": "Kleiner Hinweis: Das Portfolio ist noch im Aufbau — hier sind noch nicht alle Projekte. Ich werde nach und nach mehr hinzufügen.",
     "github": "GitHub",

@@ -2,6 +2,8 @@ import io
 import json
 import os
 import logging
+from google.auth.transport.requests import Request as GoogleRequest
+from google.auth.exceptions import RefreshError
 from typing import Any
 
 from google.oauth2.credentials import Credentials
@@ -17,9 +19,13 @@ USERS_FILE = "users.json"
 
 class DriveService:
     def __init__(self):
-        # Use the entire authorized-user JSON from env (no filesystem fallback)
-        # Set `GOOGLE_OAUTH_TOKEN_JSON` to the full JSON string in production (e.g. Render).
+        # Set GOOGLE_OAUTH_TOKEN_JSON in production (e.g. Render).
         self.token_json = os.getenv("GOOGLE_OAUTH_TOKEN_JSON", "").strip() or None
+        self.token_path = os.getenv(
+            "GOOGLE_OAUTH_TOKEN_PATH",
+            os.path.join(os.path.dirname(__file__), "..", "..", "planning", "oauth_token.json"),
+        )
+        self.token_source = "env" if self.token_json else None
         # support both the canonical env var and the older/alternate name used in .env.example
         self.timeline_folder_id = (
             os.getenv("GOOGLE_DRIVE_TIMELINE_FOLDER_ID")
@@ -31,22 +37,99 @@ class DriveService:
         # Projects folder id (can be set via env). If not set, a folder named "Projects" will be used/created.
         self.projects_folder_id = os.getenv("GOOGLE_DRIVE_PROJECTS_FOLDER_ID", "").strip() or None
         self.service = None
+        self.credentials: Credentials | None = None
+
+    def _load_token_json(self) -> str | None:
+        if self.token_json:
+            self.token_source = "env"
+            return self.token_json
+
+        try:
+            if self.token_path and os.path.exists(self.token_path):
+                with open(self.token_path, "r", encoding="utf-8") as token_file:
+                    self.token_json = token_file.read().strip() or None
+                if self.token_json:
+                    self.token_source = "file"
+                    return self.token_json
+        except Exception:
+            logging.getLogger(__name__).exception("Failed to read token file")
+
+        return None
+
+    def _persist_token_json(self, token_json: str) -> None:
+        self.token_json = token_json
+        if self.token_source != "file":
+            return
+        if not self.token_path:
+            return
+        try:
+            with open(self.token_path, "w", encoding="utf-8") as token_file:
+                token_file.write(token_json)
+        except Exception:
+            logging.getLogger(__name__).warning("Failed to persist refreshed token to file", exc_info=True)
+
+    def get_token_status(self) -> dict[str, Any]:
+        token_json = self._load_token_json()
+        if not token_json:
+            return {
+                "configured": False,
+                "source": None,
+                "token_path": self.token_path,
+            }
+
+        try:
+            info = json.loads(token_json)
+            creds = Credentials.from_authorized_user_info(info, SCOPES)
+            expiry = getattr(creds, "expiry", None)
+            return {
+                "configured": True,
+                "source": self.token_source,
+                "token_path": self.token_path if self.token_source == "file" else None,
+                "has_refresh_token": bool(getattr(creds, "refresh_token", None)),
+                "expired": bool(getattr(creds, "expired", False)),
+                "valid": bool(getattr(creds, "valid", False)),
+                "scopes": list(getattr(creds, "scopes", []) or []),
+                "expiry": expiry.isoformat().replace("+00:00", "Z") if expiry else None,
+            }
+        except Exception as exc:
+            return {
+                "configured": False,
+                "source": self.token_source,
+                "token_path": self.token_path if self.token_source == "file" else None,
+                "error": str(exc),
+            }
 
     def ensure_service(self):
         if self.service:
             return
-        # Require the token JSON in env; no file-based fallback anymore
-        if not self.token_json:
+        token_json = self._load_token_json()
+        if not token_json:
             raise RuntimeError(
-                "GOOGLE_OAUTH_TOKEN_JSON not set. Please set the authorized-user JSON in the environment."
+                "GOOGLE_OAUTH_TOKEN_JSON not set and no token file found. Please set the authorized-user JSON in the environment or provide a token file."
             )
+
         try:
-            info = json.loads(self.token_json)
+            info = json.loads(token_json)
             creds = Credentials.from_authorized_user_info(info, SCOPES)
+
+            # If credentials are expired but have a refresh token, try to refresh them.
+            if getattr(creds, "expired", False) and getattr(creds, "refresh_token", None):
+                try:
+                    creds.refresh(GoogleRequest())
+                    refreshed_json = creds.to_json()
+                    self._persist_token_json(refreshed_json)
+                except RefreshError as re:
+                    logging.getLogger(__name__).exception("Failed to refresh credentials: %s", re)
+                    raise RuntimeError(
+                        "Failed to refresh OAuth credentials (possible invalid_grant). Please re-authorize via the /api/auth/drive/start flow."
+                    ) from re
+
+            self.credentials = creds
             self.service = build("drive", "v3", credentials=creds)
         except Exception as exc:
-            logging.getLogger(__name__).exception("Failed to load credentials from GOOGLE_OAUTH_TOKEN_JSON")
-            raise RuntimeError("Failed to load credentials from GOOGLE_OAUTH_TOKEN_JSON") from exc
+            logging.getLogger(__name__).exception("Failed to load credentials from GOOGLE_OAUTH_TOKEN_JSON or token file")
+            raise RuntimeError("Failed to load credentials from GOOGLE_OAUTH_TOKEN_JSON or token file") from exc
+
     def _build_service(self):
         # try to reuse the same resolution logic as ensure_service
         try:

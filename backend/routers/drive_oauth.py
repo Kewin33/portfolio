@@ -1,10 +1,13 @@
 import os
 import json
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from google_auth_oauthlib.flow import Flow
 from fastapi.responses import JSONResponse
+
+from .storage import get_drive_service, reset_drive_service
 
 router = APIRouter()
 
@@ -26,10 +29,21 @@ def _redirect_uri() -> str:
     return os.getenv("GOOGLE_OAUTH_REDIRECT_URI", "http://localhost:8000/api/auth/drive/callback")
 
 
+def _configure_oauth_transport() -> None:
+    parsed = urlparse(_redirect_uri())
+    is_local_http = parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1"}
+    if is_local_http:
+        os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+        return
+    os.environ.pop("OAUTHLIB_INSECURE_TRANSPORT", None)
+
+
 @router.get("/auth/drive/start")
 def start_drive_oauth():
     if not os.path.exists(CLIENT_SECRET_FILE):
         raise HTTPException(status_code=500, detail="OAuth client secret file not found")
+
+    _configure_oauth_transport()
 
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRET_FILE,
@@ -64,6 +78,8 @@ def start_drive_oauth():
 async def drive_oauth_callback(request: Request):
     if not os.path.exists(CLIENT_SECRET_FILE):
         raise HTTPException(status_code=500, detail="OAuth client secret file not found")
+
+    _configure_oauth_transport()
 
     flow = Flow.from_client_secrets_file(
         CLIENT_SECRET_FILE,
@@ -109,6 +125,9 @@ async def drive_oauth_callback(request: Request):
     with open(TOKEN_FILE, "w", encoding="utf-8") as token_file:
         token_file.write(flow.credentials.to_json())
 
+    # Drop cached Drive client so the new credentials are used immediately.
+    reset_drive_service()
+
     return {
         "ok": True,
         "message": "OAuth completed. Token saved.",
@@ -118,17 +137,40 @@ async def drive_oauth_callback(request: Request):
 
 @router.get("/auth/drive/status")
 def drive_oauth_status():
-    """Dev status: reports whether an OAuth token file exists and basic token info."""
-    if not os.path.exists(TOKEN_FILE):
-        return JSONResponse({"oauth_token_present": False}, status_code=200)
+    """Dev status: reports active token source and refresh capability."""
+    service = get_drive_service()
+    status = service.get_token_status()
+
+    if not status.get("configured"):
+        fallback = {"oauth_token_present": False, **status}
+        if os.path.exists(TOKEN_FILE):
+            try:
+                with open(TOKEN_FILE, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                fallback.update(
+                    {
+                        "oauth_token_present": True,
+                        "source": "file",
+                        "client_id": data.get("client_id"),
+                        "scopes": data.get("scopes"),
+                        "expiry": data.get("expiry"),
+                        "has_refresh_token": bool(data.get("refresh_token")),
+                    }
+                )
+            except Exception as exc:
+                fallback["error"] = str(exc)
+        return JSONResponse(fallback, status_code=200)
+
     try:
-        with open(TOKEN_FILE, "r", encoding="utf-8") as f:
-            data = json.load(f)
         safe = {
             "oauth_token_present": True,
-            "client_id": data.get("client_id"),
-            "scopes": data.get("scopes"),
-            "expiry": data.get("expiry"),
+            "source": status.get("source"),
+            "token_path": status.get("token_path"),
+            "scopes": status.get("scopes"),
+            "expiry": status.get("expiry"),
+            "expired": status.get("expired"),
+            "valid": status.get("valid"),
+            "has_refresh_token": status.get("has_refresh_token"),
         }
         return safe
     except Exception as exc:
