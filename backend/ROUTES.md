@@ -26,28 +26,6 @@ Diese Datei dokumentiert die aktuell in `backend/routers/` vorhandenen Endpunkte
 
 ---
 
-## drive_oauth.py
-
-- GET `/auth/drive/start`
-  - Beschreibung: Startet den Google Drive OAuth-Flow (redirect zur Google-Consent-URL).
-  - Verhalten: Erzeugt Flow, persistiert ggf. PKCE-Verifier in `planning/oauth_verifiers.json`, leitet auf die Google-Autorisierungs-URL weiter.
-  - Auth: keine
-
-- GET `/auth/drive/callback`
-  - Beschreibung: Callback-Endpoint für Google OAuth. Holt Token und speichert Credentials nach `TOKEN_FILE` (standard: `planning/oauth_token.json`).
-  - Query-Parameter: `state`, weitere von Google.
-  - Antwort: JSON mit `{ "ok": true, "message": "OAuth completed. Token saved.", "token_path": "..." }` oder Fehler.
-  - Auth: keine
-
-- GET `/auth/drive/status`
-  - Beschreibung: Dev-Status: informiert, ob ein OAuth-Token vorhanden ist und einige nicht-sensible Metadaten (`client_id`, `scopes`, `expiry`).
-  - Antwort: `{ "oauth_token_present": true|false, ... }`
-  - Auth: keine
-
-Hinweis: Die Datei `planning/client_secret_...json` wird zur Erzeugung des Flows verwendet. Redirect-URI kann über ENV `GOOGLE_OAUTH_REDIRECT_URI` konfiguriert werden.
-
----
-
 ## projects.py
 
 - GET `/`  (Projekt-Liste)
@@ -110,6 +88,10 @@ Timeline / Tag / Drive-Storage bezogene Endpunkte:
   - Beschreibung: Liefert Drive-Speicher-Quota via `DriveService.get_storage_quota()`.
   - Auth: keine
 
+- GET `/drive/health`
+  - Beschreibung: Service-Account-Diagnose (Konfiguration, aktive Identitaet, optionaler Folder-Zugriff).
+  - Auth: keine
+
 - GET `/timeline/tags`
   - Beschreibung: Liefert Tag-Liste mit Zählern und (falls vorhanden) Farben aus `planning/timeline_tags.json`.
   - Auth: keine
@@ -159,18 +141,16 @@ Hinweis: Standard-Events (DEFAULT_TIMELINE_EVENTS) werden erzeugt, falls keine E
 - Admin-geschützte Endpunkte verwenden die Dependency `require_admin` aus `services.auth_service`.
 - Access-Tokens werden mit `create_access_token` erzeugt und mit `verify_access_token` validiert (siehe `services/auth_service.py`).
 - Environment-Variablen (wichtige Beispiele):
+  - `GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` – Empfohlen für Produktion: komplettes Service-Account-JSON als ENV (ein Schlüssel, kein interaktiver Login)
+  - `GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH` – Alternativ: Pfad zur Service-Account-JSON-Datei
   - `ADMIN_PASSWORD` – Passwort für `/admin` login
   - `GLOBAL_PASSWORD` – Passwort für `/global` Token
-  - `GOOGLE_OAUTH_REDIRECT_URI` – Redirect URI für Google OAuth
-  - `GOOGLE_OAUTH_TOKEN_PATH` – Pfad, wo OAuth-Credentials gespeichert werden (default: `planning/oauth_token.json`)
-  - `GOOGLE_OAUTH_TOKEN_JSON` – Alternativ: komplettes `authorized_user`-JSON als ENV (wenn gesetzt, wird dieses verwendet statt der Token-Datei)
 
 ---
 
 ## Dateipfade & Persistenz (Kurzüberblick)
 
-- OAuth client secret: `planning/client_secret_336033174250-....json`
-- OAuth token: standardmäßig `planning/oauth_token.json` (ENV `GOOGLE_OAUTH_TOKEN_PATH`)
+- Service Account key: bevorzugt via `GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` oder Datei-Pfad `GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH`
 - Projects are stored and read from Google Drive; there is no local projects.json fallback.
 - Timeline tags meta: `planning/timeline_tags.json`
 - Timeline backups: `planning/backups/`

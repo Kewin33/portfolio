@@ -8,18 +8,23 @@ Diese Doku beschreibt die konsistente Speicherung der Timeline-Daten in Google D
 - Quelle der Wahrheit: **nur Drive** (kein lokales Persistenz-File)
 
 ## Credentials
-- Backend liest `GOOGLE_DRIVE_CREDENTIALS_PATH`.
+- Empfohlen: Service Account (ein Schlüssel, kein interaktiver OAuth-Flow)
+  - `GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` (komplettes JSON als Secret)
+  - oder `GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH` (Dateipfad zur JSON-Datei)
 - Optional für Service Accounts ohne eigenes Drive-Quota: `GOOGLE_DRIVE_SHARED_ROOT_FOLDER_ID`
   - ID eines freigegebenen Ordners oder Shared-Drive-Ordners, auf den der Service-Account Zugriff hat.
 - Alternative ohne Ordner-Erstellung:
   - `GOOGLE_DRIVE_TIMELINE_FOLDER_ID`: vorhandener Zielordner für `timeline_events.json`
   - `GOOGLE_DRIVE_TIMELINE_FILE_ID`: vorhandene JSON-Datei, die direkt gelesen/aktualisiert wird
-- Fallbacks im Projekt:
-  1. `planning/master-purpose-459609-m3-4f50d48eaae4.json`
-  2. `planning/client_secret_336033174250-n7dc3gs96v5o9dmsiqjfuscf73umheki.apps.googleusercontent.com.json`
+- Wichtiger Setup-Schritt bei Service Account:
+  - Den Zielordner in Google Drive mit der `client_email` des Service Accounts teilen (Editor-Rechte), sonst sind keine Lese-/Schreibzugriffe moeglich.
 
 ## Backend API
 Basisroute: `/api/storage`
+
+### 0) Health / Verbindungstest
+- `GET /drive/health`
+- Prüft Service-Account-Konfiguration und ob API-Zugriff/Ordnerzugriff funktioniert.
 
 ### 1) Events laden
 - `GET /timeline/events`

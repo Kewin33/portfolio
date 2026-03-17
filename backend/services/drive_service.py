@@ -2,11 +2,9 @@ import io
 import json
 import os
 import logging
-from google.auth.transport.requests import Request as GoogleRequest
-from google.auth.exceptions import RefreshError
 from typing import Any
 
-from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseUpload
@@ -19,13 +17,13 @@ USERS_FILE = "users.json"
 
 class DriveService:
     def __init__(self):
-        # Set GOOGLE_OAUTH_TOKEN_JSON in production (e.g. Render).
-        self.token_json = os.getenv("GOOGLE_OAUTH_TOKEN_JSON", "").strip() or None
-        self.token_path = os.getenv(
-            "GOOGLE_OAUTH_TOKEN_PATH",
-            os.path.join(os.path.dirname(__file__), "..", "..", "planning", "oauth_token.json"),
+        # Service-account-only authentication.
+        self.service_account_json = os.getenv("GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON", "").strip() or None
+        self.service_account_path = os.getenv(
+            "GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH",
+            os.path.join(os.path.dirname(__file__), "..", "..", "planning", "master-purpose-459609-m3-4f50d48eaae4.json"),
         )
-        self.token_source = "env" if self.token_json else None
+        self.token_source: str | None = None
         # support both the canonical env var and the older/alternate name used in .env.example
         self.timeline_folder_id = (
             os.getenv("GOOGLE_DRIVE_TIMELINE_FOLDER_ID")
@@ -36,99 +34,74 @@ class DriveService:
         self.timeline_file_id = os.getenv("GOOGLE_DRIVE_TIMELINE_FILE_ID", "").strip() or None
         # Projects folder id (can be set via env). If not set, a folder named "Projects" will be used/created.
         self.projects_folder_id = os.getenv("GOOGLE_DRIVE_PROJECTS_FOLDER_ID", "").strip() or None
+        self.storage_mode = os.getenv("GOOGLE_DRIVE_STORAGE_MODE", "auto").strip().lower()
+        self.prefer_description_storage = self.storage_mode == "description"
         self.service = None
-        self.credentials: Credentials | None = None
+        self.credentials = None
 
-    def _load_token_json(self) -> str | None:
-        if self.token_json:
-            self.token_source = "env"
-            return self.token_json
+    @staticmethod
+    def _is_quota_error(message: str) -> bool:
+        return "storageQuotaExceeded" in message or "Service Accounts do not have storage quota" in message
+
+    def _load_service_account_info(self) -> dict[str, Any] | None:
+        if self.service_account_json:
+            try:
+                info = json.loads(self.service_account_json)
+                self.token_source = "service-account-env"
+                return info
+            except Exception:
+                logging.getLogger(__name__).exception("Failed to parse GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON")
 
         try:
-            if self.token_path and os.path.exists(self.token_path):
-                with open(self.token_path, "r", encoding="utf-8") as token_file:
-                    self.token_json = token_file.read().strip() or None
-                if self.token_json:
-                    self.token_source = "file"
-                    return self.token_json
+            if self.service_account_path and os.path.exists(self.service_account_path):
+                with open(self.service_account_path, "r", encoding="utf-8") as fh:
+                    info = json.load(fh)
+                self.token_source = "service-account-file"
+                return info
         except Exception:
-            logging.getLogger(__name__).exception("Failed to read token file")
+            logging.getLogger(__name__).exception("Failed to read service account key file")
 
         return None
 
-    def _persist_token_json(self, token_json: str) -> None:
-        self.token_json = token_json
-        if self.token_source != "file":
-            return
-        if not self.token_path:
-            return
-        try:
-            with open(self.token_path, "w", encoding="utf-8") as token_file:
-                token_file.write(token_json)
-        except Exception:
-            logging.getLogger(__name__).warning("Failed to persist refreshed token to file", exc_info=True)
-
     def get_token_status(self) -> dict[str, Any]:
-        token_json = self._load_token_json()
-        if not token_json:
-            return {
-                "configured": False,
-                "source": None,
-                "token_path": self.token_path,
-            }
-
-        try:
-            info = json.loads(token_json)
-            creds = Credentials.from_authorized_user_info(info, SCOPES)
-            expiry = getattr(creds, "expiry", None)
+        sa_info = self._load_service_account_info()
+        if sa_info:
             return {
                 "configured": True,
                 "source": self.token_source,
-                "token_path": self.token_path if self.token_source == "file" else None,
-                "has_refresh_token": bool(getattr(creds, "refresh_token", None)),
-                "expired": bool(getattr(creds, "expired", False)),
-                "valid": bool(getattr(creds, "valid", False)),
-                "scopes": list(getattr(creds, "scopes", []) or []),
-                "expiry": expiry.isoformat().replace("+00:00", "Z") if expiry else None,
+                "auth_mode": "service_account",
+                "service_account_email": sa_info.get("client_email"),
+                "project_id": sa_info.get("project_id"),
+                "scopes": SCOPES,
+                "valid": True,
+                "expired": False,
+                "has_refresh_token": False,
+                "token_path": self.service_account_path if self.token_source == "service-account-file" else None,
             }
-        except Exception as exc:
-            return {
-                "configured": False,
-                "source": self.token_source,
-                "token_path": self.token_path if self.token_source == "file" else None,
-                "error": str(exc),
-            }
+
+        return {
+            "configured": False,
+            "source": None,
+            "auth_mode": None,
+            "token_path": self.service_account_path,
+        }
 
     def ensure_service(self):
         if self.service:
             return
-        token_json = self._load_token_json()
-        if not token_json:
+        service_account_info = self._load_service_account_info()
+        if not service_account_info:
             raise RuntimeError(
-                "GOOGLE_OAUTH_TOKEN_JSON not set and no token file found. Please set the authorized-user JSON in the environment or provide a token file."
+                "No Google Drive service account credentials configured. Set GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON or GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH."
             )
 
         try:
-            info = json.loads(token_json)
-            creds = Credentials.from_authorized_user_info(info, SCOPES)
-
-            # If credentials are expired but have a refresh token, try to refresh them.
-            if getattr(creds, "expired", False) and getattr(creds, "refresh_token", None):
-                try:
-                    creds.refresh(GoogleRequest())
-                    refreshed_json = creds.to_json()
-                    self._persist_token_json(refreshed_json)
-                except RefreshError as re:
-                    logging.getLogger(__name__).exception("Failed to refresh credentials: %s", re)
-                    raise RuntimeError(
-                        "Failed to refresh OAuth credentials (possible invalid_grant). Please re-authorize via the /api/auth/drive/start flow."
-                    ) from re
-
+            creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
             self.credentials = creds
             self.service = build("drive", "v3", credentials=creds)
         except Exception as exc:
-            logging.getLogger(__name__).exception("Failed to load credentials from GOOGLE_OAUTH_TOKEN_JSON or token file")
-            raise RuntimeError("Failed to load credentials from GOOGLE_OAUTH_TOKEN_JSON or token file") from exc
+            logging.getLogger(__name__).exception("Failed to load service account credentials")
+            raise RuntimeError("Failed to load service account credentials") from exc
 
     def _build_service(self):
         # try to reuse the same resolution logic as ensure_service
@@ -321,25 +294,34 @@ class DriveService:
             metadata["parents"] = [self.timeline_folder_id]
 
         self.ensure_service()
-        created = self._execute(
-            self.service.files().create(
-                body=metadata,
-                media_body=MediaIoBaseUpload(
-                    io.BytesIO(b"[]"),
-                    mimetype=TIMELINE_MIME,
-                    resumable=False,
-                ),
-                fields="id",
-                supportsAllDrives=True,
+        if self.prefer_description_storage:
+            metadata["description"] = "[]"
+            created = self._execute(
+                self.service.files().create(
+                    body=metadata,
+                    fields="id",
+                    supportsAllDrives=True,
+                )
             )
-        )
+        else:
+            created = self._execute(
+                self.service.files().create(
+                    body=metadata,
+                    media_body=MediaIoBaseUpload(
+                        io.BytesIO(b"[]"),
+                        mimetype=TIMELINE_MIME,
+                        resumable=False,
+                    ),
+                    fields="id",
+                    supportsAllDrives=True,
+                )
+            )
         return created["id"]
 
     def _get_or_create_timeline_file(self) -> str:
         existing = self._find_timeline_file()
         if existing:
-            # if the existing file is not owned by the currently authenticated user,
-            # create a new file owned by the OAuth user to avoid service-account quota issues
+            # If the existing file owner differs from the active identity, create a new file.
             try:
                 self.ensure_service()
                 info = self._execute(
@@ -355,7 +337,6 @@ class DriveService:
                 user_email = about.get("user", {}).get("emailAddress")
                 owner_emails = [o.get("emailAddress") for o in owners if o.get("emailAddress")]
                 if user_email and user_email not in owner_emails:
-                    #logging.getLogger(__name__).debug("timeline file %s not owned by %s, creating new file", existing, user_email)
                     return self._create_timeline_file()
             except Exception:
                 # if any metadata check fails, fall back to using the existing file id
@@ -368,6 +349,22 @@ class DriveService:
         if not file_id:
             return []
         self.ensure_service()
+        if self.prefer_description_storage:
+            meta = self._execute(
+                self.service.files().get(
+                    fileId=file_id,
+                    fields="description",
+                    supportsAllDrives=True,
+                )
+            )
+            desc = meta.get("description", "") or ""
+            if not desc.strip():
+                return []
+            parsed = json.loads(desc)
+            if not isinstance(parsed, list):
+                raise RuntimeError("Timeline description content is not a JSON array")
+            return parsed
+
         try:
             content = self._execute(
                 self.service.files().get_media(
@@ -385,8 +382,14 @@ class DriveService:
             return parsed
         except RuntimeError as exc:
             msg = str(exc)
-            if "storageQuotaExceeded" in msg or "Service Accounts do not have storage quota" in msg:
+            if self._is_quota_error(msg):
+                if self.storage_mode == "media":
+                    raise RuntimeError(
+                        "Media storage is enforced (GOOGLE_DRIVE_STORAGE_MODE=media) but Drive quota is unavailable for this identity. "
+                        "Use a Shared Drive/freigegebenen Ordner with proper permissions, or switch to GOOGLE_DRIVE_STORAGE_MODE=description."
+                    ) from exc
                 # fallback: read JSON from file description metadata
+                self.prefer_description_storage = True
                 meta = self._execute(
                     self.service.files().get(
                         fileId=file_id,
@@ -406,6 +409,20 @@ class DriveService:
     def write_timeline_events(self, events: list[dict[str, Any]]) -> str:
         file_id = self._get_or_create_timeline_file()
         payload = json.dumps(events, ensure_ascii=False, indent=2).encode("utf-8")
+        payload_text = payload.decode("utf-8")
+        if self.prefer_description_storage:
+            self.ensure_service()
+            updated = self._execute(
+                self.service.files().update(
+                    fileId=file_id,
+                    body={"description": payload_text},
+                    fields="id,size,modifiedTime,description",
+                    supportsAllDrives=True,
+                )
+            )
+            self.timeline_file_id = updated["id"]
+            return updated["id"]
+
         media = MediaIoBaseUpload(io.BytesIO(payload), mimetype=TIMELINE_MIME, resumable=False)
 
         self.ensure_service()
@@ -420,8 +437,14 @@ class DriveService:
             )
         except RuntimeError as exc:
             msg = str(exc)
-            if "storageQuotaExceeded" in msg or "Service Accounts do not have storage quota" in msg:
-                # try creating a new file owned by the OAuth user; if that fails, fallback to description
+            if self._is_quota_error(msg):
+                if self.storage_mode == "media":
+                    raise RuntimeError(
+                        "Media storage is enforced (GOOGLE_DRIVE_STORAGE_MODE=media) but upload quota is unavailable for this identity. "
+                        "Move target to Shared Drive/freigegebenen Ordner and ensure service account has access."
+                    ) from exc
+                self.prefer_description_storage = True
+                # Try creating a new file; if that fails, fallback to description metadata.
                 metadata: dict[str, Any] = {"name": TIMELINE_FILE, "mimeType": TIMELINE_MIME}
                 if self.timeline_folder_id:
                     metadata["parents"] = [self.timeline_folder_id]
@@ -438,7 +461,6 @@ class DriveService:
                     updated = created
                 except RuntimeError:
                     # fallback to storing JSON in the file description
-                    payload_text = payload.decode("utf-8")
                     updated = self._execute(
                         self.service.files().update(
                             fileId=file_id,

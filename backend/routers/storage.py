@@ -354,6 +354,68 @@ async def drive_quota(service: DriveService = Depends(get_drive_service)):
         raise HTTPException(status_code=500, detail=f"Failed to get quota: {exc}")
 
 
+@router.get("/drive/health")
+async def drive_health(service: DriveService = Depends(get_drive_service)):
+    """Checks whether service-account auth is configured and Drive API calls work."""
+    status = service.get_token_status()
+    if not status.get("configured"):
+        return {
+            "ok": False,
+            "configured": False,
+            "message": "Service account credentials are missing.",
+            "expected_env": [
+                "GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON",
+                "GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH",
+            ],
+        }
+
+    try:
+        service.ensure_service()
+        about = service._execute(service.service.about().get(fields="user"))
+        folder_ok = None
+        folder_error = None
+        if service.timeline_folder_id:
+            try:
+                service._execute(
+                    service.service.files().get(
+                        fileId=service.timeline_folder_id,
+                        fields="id,name",
+                        supportsAllDrives=True,
+                    )
+                )
+                folder_ok = True
+            except Exception as exc:
+                folder_ok = False
+                folder_error = str(exc)
+
+        return {
+            "ok": True,
+            "configured": True,
+            "auth_mode": status.get("auth_mode"),
+            "source": status.get("source"),
+            "storage_mode": service.storage_mode,
+            "prefer_description_storage": service.prefer_description_storage,
+            "service_account_email": status.get("service_account_email"),
+            "project_id": status.get("project_id"),
+            "timeline_folder_id": service.timeline_folder_id,
+            "timeline_folder_accessible": folder_ok,
+            "timeline_folder_error": folder_error,
+            "drive_user": about.get("user"),
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "configured": True,
+            "auth_mode": status.get("auth_mode"),
+            "source": status.get("source"),
+            "storage_mode": service.storage_mode,
+            "prefer_description_storage": service.prefer_description_storage,
+            "service_account_email": status.get("service_account_email"),
+            "project_id": status.get("project_id"),
+            "error": str(exc),
+        }
+
+
 @router.get("/timeline/tags")
 async def list_timeline_tags(service: DriveService = Depends(get_drive_service)):
     try:

@@ -15,4 +15,4 @@ Das Frontend nutzt `next-intl` für die Zweisprachigkeit (DE/EN) und Tailwind CS
 2. `python -m venv venv`
 3. `venv\Scripts\activate` (Windows) oder `source venv/bin/activate` (Mac/Linux)
 4. `pip install -r requirements.txt`
-5. `uvicorn main:app --reload`
+5. `uvicorn main:app --reload` / `uvicorn main:app --reload --host 0.0.0.0 --port 8000`
