@@ -33,6 +33,11 @@ dist/
 planning/
 .github/copilot-instructions.md
 
+# local service account / secret keys
+*.service-account.json
+*client_secret*.json
+*credentials*.json
+.env.example
 # Next.js static
 # keep generated profile placeholder out of repo if present
 /public/profile-placeholder.png

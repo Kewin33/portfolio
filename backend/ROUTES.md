@@ -13,7 +13,7 @@ Diese Datei dokumentiert die aktuell in `backend/routers/` vorhandenen Endpunkte
   - Auth: keine
 
 - POST `/admin`
-  - Beschreibung: Einfaches Admin-Login mittels Passwort (ENV `ADMIN_PASSWORD` oder Default `alexistcool`).
+  - Beschreibung: Einfaches Admin-Login mittels Passwort 
   - Request-Body: `{ "password": "..." }`
   - Antwort: `{ "access_token": "...", "token_type": "bearer" }`
   - Auth: keine (liefert Admin-Token bei korrektem Passwort)

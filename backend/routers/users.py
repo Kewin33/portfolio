@@ -182,7 +182,7 @@ async def global_password(payload: dict):
     pwd = payload.get("password")
     if not pwd:
         raise HTTPException(status_code=400, detail="Missing password")
-    expected = os.getenv("GLOBAL_PASSWORD", "topsecret")
+    expected = os.getenv("GLOBAL_PASSWORD",)
     if pwd != expected:
         raise HTTPException(status_code=401, detail="Invalid password")
     token = create_access_token({"sub": "global", "role": "global"})

@@ -29,7 +29,7 @@ class AdminLoginRequest(BaseModel):
 @router.post("/admin")
 async def admin_login(req: AdminLoginRequest):
     import os
-    admin_password = os.getenv("ADMIN_PASSWORD", "alexistcool")
+    admin_password = os.getenv("ADMIN_PASSWORD")
 
     if req.password != admin_password:
         raise HTTPException(status_code=401, detail="Invalid password")
