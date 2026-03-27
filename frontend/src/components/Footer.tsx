@@ -2,7 +2,7 @@
 
 import { Mail, Github } from 'lucide-react';
 import { usePathname } from '@/i18n/routing';
-import AccountControls from '@/components/AccountControls';
+import AccountControls from '@/components/core/auth/AccountControls';
 
 export default function Footer() {
   const year = new Date().getFullYear();
