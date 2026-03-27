@@ -42,7 +42,7 @@ export default function FilterBar({ availableTags, selected, onChange, onCreate,
             <button
               onClick={() => setZoomPercent(p => Math.max(0.0001, p / 2))}
               className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300"
-              aria-label="Zoom out"
+              aria-label={t('zoomOut')}
             >
               −
             </button>
@@ -58,7 +58,7 @@ export default function FilterBar({ availableTags, selected, onChange, onCreate,
             <button
               onClick={() => setZoomPercent(p => Math.min(25, p * 2))}
               className="px-2 py-1 bg-gray-200 dark:bg-gray-700 rounded hover:bg-gray-300"
-              aria-label="Zoom in"
+              aria-label={t('zoomIn')}
             >
               +
             </button>
@@ -66,7 +66,7 @@ export default function FilterBar({ availableTags, selected, onChange, onCreate,
               onClick={() => setZoomPercent(0.001)}
               className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
             >
-              Reset
+              {t('zoomReset')}
             </button>
           </div>
           <span className="text-sm text-gray-500 w-24 text-right">{formatZoom(zoomPercent)}</span>

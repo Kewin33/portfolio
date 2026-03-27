@@ -1,6 +1,7 @@
 'use client';
 
 import { BookOpen } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import ChessSidebarAnalysisView from '@/components/chess/ChessSidebarAnalysisView';
 import ChessSidebarExplorerPanel from '@/components/chess/ChessSidebarExplorerPanel';
 import ChessSidebarOptionsView from '@/components/chess/ChessSidebarOptionsView';
@@ -87,6 +88,7 @@ export default function ChessSidebar({
   onToggleEditMode,
   onReset,
 }: ChessSidebarProps) {
+  const t = useTranslations('ChessSidebar');
   const [explorerOpen, setExplorerOpen] = useState(false);
 
   useEffect(() => {
@@ -156,7 +158,7 @@ export default function ChessSidebar({
             onClick={onPrev}
             disabled={positionIndex <= 0}
             className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors disabled:opacity-50"
-            aria-label="Previous"
+            aria-label={t('actions.previous')}
           >
             ←
           </button>
@@ -164,7 +166,7 @@ export default function ChessSidebar({
             onClick={onNext}
             disabled={positionIndex >= moves.length}
             className="px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded transition-colors disabled:opacity-50"
-            aria-label="Next"
+            aria-label={t('actions.next')}
           >
             →
           </button>
@@ -176,7 +178,7 @@ export default function ChessSidebar({
                   ? 'bg-violet-600 text-white hover:bg-violet-700'
                   : 'bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-100 hover:bg-violet-200 dark:hover:bg-violet-900/60'
               }`}
-              aria-label="Menu"
+              aria-label={t('actions.menu')}
             >
               ☰
             </button>
@@ -189,8 +191,8 @@ export default function ChessSidebar({
                   ? 'bg-violet-600 text-white hover:bg-violet-700'
                   : 'bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-100 hover:bg-violet-200 dark:hover:bg-violet-900/60'
               }`}
-              aria-label="Opening explorer"
-              title="Opening Explorer / Tablebase"
+              aria-label={t('actions.openingExplorer')}
+              title={t('titles.openingExplorerTablebase')}
             >
               <BookOpen className="h-4 w-4" />
             </button>

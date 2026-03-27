@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from 'next-intl';
 import Tag from '@/components/timeline/Tag';
 
 type TagItem = { tag: string; count: number; color?: string | null };
@@ -20,6 +21,7 @@ export default function TagSelect({
   placeholder?: string;
   allowCreate?: boolean;
 }) {
+  const t = useTranslations('Timeline');
   const [open, setOpen] = useState(false);
   const apiBase = process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
@@ -57,7 +59,7 @@ export default function TagSelect({
   };
 
   const createTag = async (name?: string) => {
-    const tagName = name ?? prompt("New tag name:");
+    const tagName = name ?? prompt(t('newTagPrompt'));
     if (!tagName) return;
     const color = generateColor(tagName);
     await fetch(`${apiBase}/api/storage/timeline/tags`, {
@@ -114,7 +116,7 @@ export default function TagSelect({
           </div>
           {allowCreate && (
             <div className="mt-2 border-t pt-2">
-              <button className="w-full text-left text-sm text-blue-600" onClick={() => createTag()}>+ Neuer Tag</button>
+              <button className="w-full text-left text-sm text-blue-600" onClick={() => createTag()}>{t('newTagButton')}</button>
             </div>
           )}
         </div>

@@ -23,6 +23,9 @@
     },
     "otherProjects": "Other Projects",
     "otherProjectsNote": "Quick note: The portfolio is still a work in progress — not all projects are listed yet. I'll be adding more over time.",
+    "adminPanel": "Admin Panel",
+    "scrollToAbout": "Scroll to about section",
+    "close": "Close",
     "github": "GitHub",
     "demo": "Demo"
   },
@@ -35,8 +38,17 @@
     "studies": "Studies",
     "sports": "Sports",
     "hobbies": "Hobbies",
+    "portfolioTitle": "My portfolio",
+    "roleLabel": "Role",
     "lockedTitle": "Locked sections",
     "lockedDescription": "These areas are still under development and are currently available to admins only."
+  },
+  "Breadcrumb": {
+    "ariaLabel": "Breadcrumb",
+    "puzzles": "Puzzles",
+    "admin": "Admin",
+    "profile": "Profile",
+    "survey": "Survey"
   },
   "Timeline": {
     "title": "Timeline",
@@ -57,8 +69,13 @@
     "deletePermanent": "Delete permanently",
     "eventTags": "Event Tags",
     "filterTags": "Filter tags",
+    "newTagPrompt": "New tag name:",
+    "newTagButton": "+ New tag",
     "searchTitle": "Search by title",
     "zoom": "Zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "zoomReset": "Reset",
     "loading": "Loading timeline...",
     "events": {
       "portfolio": {
@@ -277,6 +294,9 @@
     "dailyLimitReached": "Daily limit reached: one puzzle already solved today.",
     "trackingSignedIn": "Progress is saved to your account.",
     "trackingGuest": "Guest mode: progress is local only.",
+    "register": "Register",
+    "selectPuzzle": "Select a puzzle",
+    "closePuzzle": "Close puzzle",
     "roadmapTitle": "Roadmap",
     "loading": "Loading puzzles...",
     "noPuzzles": "No puzzles available yet.",
@@ -290,6 +310,45 @@
       "wrong": "Wrong move, reverted.",
       "solved": "Puzzle solved!"
     },
+    "player": {
+      "confirmPrompt": "Are you really sure that you are better after every line?",
+      "instruction": {
+        "playMove": "Play a move on the board.",
+        "selectGeneratedNode": "Select one generated node.",
+        "solutionTreeCorrect": "Solution tree (correct)"
+      },
+      "actions": {
+        "help": "help",
+        "hideHelp": "hide help",
+        "solution": "show solution",
+        "confirm": "confirm",
+        "verify": "verify",
+        "warning": "Warning",
+        "cancel": "cancel",
+        "reset": "reset",
+        "tryAgain": "try again",
+        "deleteNode": "Delete node"
+      },
+      "help": {
+        "step1": "When \"Play a move on the board\" is shown above, make exactly one move on the board.",
+        "step2": "When \"Select one generated node\" is shown above, do not move on the board and click one critical node in the tree.",
+        "step3": "After clicking a critical node, continue from that position and repeat the flow.",
+        "step4": "You must handle and solve all critical lines, not just one line.",
+        "step5": "Press \"confirm\" only when no critical nodes are left and all paths are completed."
+      },
+      "feedback": {
+        "selectCriticalNodeFirst": "Select one critical move node first.",
+        "nodeSelected": "Node selected. Continue from this position.",
+        "userNodeDeleted": "User node deleted.",
+        "confirmWrong": "That's not correct.",
+        "unsolvedCritical": "There are still unsolved critical lines. Solve all critical moves before confirming."
+      },
+      "source": {
+        "user": "User",
+        "critical": "Critical"
+      },
+      "userMoves": "User moves: {count}"
+    },
     "admin": {
       "title": "Admin Puzzle Studio",
       "setupMode": "Setup position",
@@ -299,7 +358,23 @@
       "dashboard": "Puzzle dashboard",
       "saved": "Puzzle saved.",
       "loaded": "Puzzle loaded.",
-      "sideToMove": "Side to move"
+      "sideToMove": "Side to move",
+      "failedToLoad": "Failed to load admin puzzles",
+      "orderSaved": "Order saved",
+      "orderSaveFailed": "Order save failed",
+      "titlePlaceholder": "Title (EN)",
+      "descriptionPlaceholder": "Description (EN)",
+      "enabled": "enabled",
+      "addCriticalMove": "+ critical move",
+      "addDeeper": "+ deeper",
+      "saveFailed": "Save failed",
+      "criticalMoveTree": "Critical move tree",
+      "criticalMoveTreeHint": "Top-down tree. Select a node and play a move on the board to add a child.",
+      "edit": "edit",
+      "deleteFailed": "Delete failed",
+      "noCriticalMovesYet": "No critical moves yet.",
+      "select": "select",
+      "uciMovePlaceholder": "uci move"
     }
   },
   "MusicPage": {
@@ -329,6 +404,183 @@
       "fitness": "Fitness",
       "travel": "Travel"
     }
+  },
+  "AccountControls": {
+    "toggleTheme": "Toggle theme",
+    "switchLanguage": "Switch language",
+    "dark": "Dark",
+    "light": "Light",
+    "logout": "Logout",
+    "login": "Login",
+    "userFallback": "user"
+  },
+  "Admin": {
+    "tabs": {
+      "projects": "Projects",
+      "users": "Users"
+    },
+    "actions": {
+      "close": "Close"
+    },
+    "projects": {
+      "title": "Admin: Projects",
+      "confirmDeleteProject": "Delete this project?",
+      "noProjectsYet": "No projects yet.",
+      "noProjectsInSection": "No projects in this section.",
+      "noImage": "No image",
+      "sections": {
+        "main": "Main Projects",
+        "other": "Other Projects"
+      },
+      "actions": {
+        "reload": "Reload",
+        "newProject": "+ New Project",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "messages": {
+        "loadedCount": "Loaded {count} projects",
+        "loadFailed": "Load failed: {error}",
+        "updated": "Updated project",
+        "created": "Created project",
+        "saveFailed": "Save failed: {error}",
+        "reorderUpdated": "Project order updated",
+        "reorderFailed": "Reorder failed: {error}",
+        "deleted": "Deleted",
+        "deleteFailed": "Delete failed: {error}"
+      },
+      "form": {
+        "editProject": "Edit Project",
+        "newProject": "New Project",
+        "projectImage": "Project Image",
+        "projectImageAlt": "Project image",
+        "previewAlt": "preview",
+        "section": {
+          "main": "Main",
+          "other": "Other"
+        },
+        "placeholders": {
+          "title": "Title *",
+          "description": "Description",
+          "github": "GitHub URL",
+          "demo": "Demo URL"
+        },
+        "actions": {
+          "choose": "Choose",
+          "save": "Save",
+          "cancel": "Cancel"
+        },
+        "errors": {
+          "titleRequired": "Title is required",
+          "imageUploadFailed": "Image upload failed",
+          "saveFailed": "Save failed"
+        },
+        "techIcons": {
+          "label": "Tech Icons",
+          "selectIcon": "Select icon",
+          "searchPlaceholder": "Search icons...",
+          "noResults": "No results",
+          "removeIcon": "Remove icon"
+        }
+      }
+    },
+    "users": {
+      "title": "Admin: Users",
+      "noUsersYet": "No users yet.",
+      "invalidEmail": "Invalid email",
+      "confirmApprove": "Approve {email}?",
+      "confirmDelete": "Delete user {email}?",
+      "actions": {
+        "reload": "Reload",
+        "approve": "Approve",
+        "edit": "Edit",
+        "save": "Save",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "messages": {
+        "loaded": "Loaded users",
+        "loadFailed": "Load failed: {error}",
+        "approved": "Approved {email}",
+        "approveFailed": "Approve failed: {error}",
+        "deleted": "Deleted {email}",
+        "deleteFailed": "Delete failed: {error}",
+        "updated": "Updated {email}",
+        "updateFailed": "Update failed: {error}"
+      }
+    }
+  },
+  "ChessSidebar": {
+    "sections": {
+      "options": "Options",
+      "analysis": "Analysis"
+    },
+    "controls": {
+      "depth": "Depth",
+      "lines": "Lines",
+      "threads": "Threads",
+      "memoryMb": "Memory (MB)"
+    },
+    "state": {
+      "active": "active",
+      "off": "off"
+    },
+    "options": {
+      "engine": "Engine {status}",
+      "setupPosition": "Setup position"
+    },
+    "actions": {
+      "resetBoard": "Reset Board",
+      "previous": "Previous",
+      "next": "Next",
+      "menu": "Menu",
+      "openingExplorer": "Opening explorer",
+      "toggleEngine": "Toggle engine",
+      "engineSettings": "Engine settings",
+      "collapseLine": "Collapse line",
+      "expandLine": "Expand line"
+    },
+    "titles": {
+      "openingExplorerTablebase": "Opening Explorer / Tablebase"
+    },
+    "source": {
+      "cloud": "Cloud",
+      "local": "Local",
+      "idle": "Idle"
+    },
+    "noMovesYet": "No moves yet",
+    "explorer": {
+      "title": "Explorer",
+      "loading": "loading...",
+      "actions": {
+        "close": "Close explorer"
+      },
+      "errors": {
+        "enterLichessUsername": "Please enter a Lichess username."
+      },
+      "player": {
+        "usernamePlaceholder": "Lichess Username",
+        "white": "White",
+        "black": "Black"
+      },
+      "tableHeaders": {
+        "move": "Move",
+        "games": "#Games",
+        "wdw": "White/Draw/Black"
+      },
+      "noDataForPosition": "No data for this position.",
+      "tablebase": {
+        "suitable": "Tablebase is suitable for this position.",
+        "usuallyUpTo7": "Tablebase is usually useful up to 7 pieces.",
+        "noMoves": "No tablebase moves available."
+      }
+    }
+  },
+  "ChessFenPgnPanel": {
+    "fenLabel": "FEN",
+    "fenPlaceholder": "Paste FEN...",
+    "pgnLabel": "PGN",
+    "pgnPlaceholder": "Paste PGN..."
   }
   ,
   "Login": {

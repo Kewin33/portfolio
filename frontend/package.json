@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check:i18n-hardcoded": "node scripts/check-hardcoded-ui-texts.mjs",
+    "check:i18n-hardcoded:update": "node scripts/check-hardcoded-ui-texts.mjs --update-baseline"
   },
   "dependencies": {
     "@emailjs/browser": "^3.3.0",

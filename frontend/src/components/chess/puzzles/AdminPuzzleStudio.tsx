@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Chess } from 'chess.js';
+import { useTranslations } from 'next-intl';
 import ChessBoardComponent from '@/components/chess/ChessBoard';
 import AdminTreeGraph from '@/components/chess/puzzles/AdminTreeGraph';
 import { fetchAdminPuzzles, removePuzzle, reorderAdminPuzzles, savePuzzle } from '@/components/chess/puzzles/api';
@@ -25,6 +26,7 @@ interface AdminPuzzleStudioProps {
 }
 
 export default function AdminPuzzleStudio({ labels, onChanged }: AdminPuzzleStudioProps) {
+  const t = useTranslations('ChessPuzzles.admin');
   const [items, setItems] = useState<PuzzleItem[]>([]);
   const [status, setStatus] = useState('');
   const [statusType, setStatusType] = useState<'idle' | 'success' | 'error'>('idle');
@@ -48,7 +50,7 @@ export default function AdminPuzzleStudio({ labels, onChanged }: AdminPuzzleStud
 
   useEffect(() => {
     loadItems().catch(() => {
-      setStatus('Failed to load admin puzzles');
+      setStatus(t('failedToLoad'));
       setStatusType('error');
     });
   }, []);
@@ -224,11 +226,11 @@ export default function AdminPuzzleStudio({ labels, onChanged }: AdminPuzzleStud
     try {
       const reordered = await reorderAdminPuzzles(next.map((it) => it.id));
       setItems(reordered);
-      setStatus('Order saved');
+      setStatus(t('orderSaved'));
       setStatusType('success');
       await onChanged();
     } catch {
-      setStatus('Order save failed');
+      setStatus(t('orderSaveFailed'));
       setStatusType('error');
       await loadItems().catch(() => undefined);
     }
@@ -250,20 +252,20 @@ export default function AdminPuzzleStudio({ labels, onChanged }: AdminPuzzleStud
         <div className="space-y-2">
           <input
             className="w-full rounded border px-3 py-2 bg-transparent"
-            placeholder="Title (EN)"
+            placeholder={t('titlePlaceholder')}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
           <textarea
             className="w-full rounded border px-3 py-2 bg-transparent"
-            placeholder="Description (EN)"
+            placeholder={t('descriptionPlaceholder')}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
           <div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-              enabled
+              {t('enabled')}
             </label>
           </div>
         </div>
@@ -292,11 +294,11 @@ export default function AdminPuzzleStudio({ labels, onChanged }: AdminPuzzleStud
 
           <div className="flex flex-wrap gap-2">
             <button className="rounded border px-3 py-2" onClick={addRootMove}>
-              + critical move
+              {t('addCriticalMove')}
             </button>
             {!!selectedPath.length && (
               <button className="rounded border px-3 py-2" onClick={() => addChildAtPath(selectedPath)}>
-                + deeper
+                {t('addDeeper')}
               </button>
             )}
           </div>
@@ -305,7 +307,7 @@ export default function AdminPuzzleStudio({ labels, onChanged }: AdminPuzzleStud
             className="rounded border px-3 py-2 bg-blue-600 text-white"
             onClick={() =>
               onSave().catch(() => {
-                setStatus('Save failed');
+                setStatus(t('saveFailed'));
                 setStatusType('error');
               })
             }
@@ -328,8 +330,8 @@ export default function AdminPuzzleStudio({ labels, onChanged }: AdminPuzzleStud
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <div className="rounded-xl border border-slate-300 dark:border-slate-700 p-3 max-h-[520px] overflow-auto">
-          <div className="text-sm font-semibold mb-2">Critical move tree</div>
-          <div className="text-xs text-slate-500 mb-2">Top-down tree. Select a node and play a move on the board to add a child.</div>
+          <div className="text-sm font-semibold mb-2">{t('criticalMoveTree')}</div>
+          <div className="text-xs text-slate-500 mb-2">{t('criticalMoveTreeHint')}</div>
           <AdminTreeGraph
             nodes={tree}
             selectedPath={selectedPath}
@@ -378,13 +380,13 @@ export default function AdminPuzzleStudio({ labels, onChanged }: AdminPuzzleStud
               </div>
               <div className="flex gap-2">
                 <button className="rounded border px-2 py-1 text-sm" onClick={() => loadForEdit(item)}>
-                  edit
+                  {t('edit')}
                 </button>
                 <button
                   className="rounded border px-2 py-1 text-sm text-rose-600"
                   onClick={() =>
                     onDelete(item.id).catch(() => {
-                      setStatus('Delete failed');
+                      setStatus(t('deleteFailed'));
                       setStatusType('error');
                     })
                   }

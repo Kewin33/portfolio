@@ -1,6 +1,7 @@
 "use client";
 
 import { GripVertical } from "lucide-react";
+import { useTranslations } from 'next-intl';
 import { toProjectImageSrc } from "@/utils/projectImages";
 import type { Project } from "./projectTypes";
 
@@ -23,6 +24,8 @@ export default function AdminProjectRow({
   onDrop: () => void;
   isDragging?: boolean;
 }) {
+  const t = useTranslations('Admin.projects');
+
   return (
     <div
       draggable
@@ -41,7 +44,7 @@ export default function AdminProjectRow({
         {project.image ? (
           <img src={toProjectImageSrc(project.image, apiBase)} alt={project.title} className="h-16 w-16 rounded object-cover transition hover:scale-105" />
         ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded bg-slate-100 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-300">No image</div>
+          <div className="flex h-16 w-16 items-center justify-center rounded bg-slate-100 text-xs text-slate-500 dark:bg-slate-700 dark:text-slate-300">{t('noImage')}</div>
         )}
       </button>
 
@@ -56,8 +59,8 @@ export default function AdminProjectRow({
       </div>
 
       <div className="flex shrink-0 gap-2">
-        <button onClick={onEdit} className="rounded bg-yellow-400 px-2 py-1 text-xs dark:bg-yellow-600">Edit</button>
-        <button onClick={onDelete} className="rounded bg-red-500 px-2 py-1 text-xs text-white">Delete</button>
+        <button onClick={onEdit} className="rounded bg-yellow-400 px-2 py-1 text-xs dark:bg-yellow-600">{t('actions.edit')}</button>
+        <button onClick={onDelete} className="rounded bg-red-500 px-2 py-1 text-xs text-white">{t('actions.delete')}</button>
       </div>
     </div>
   );

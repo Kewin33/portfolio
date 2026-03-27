@@ -69,7 +69,7 @@ export default function HomeOtherProjectCard({ project }: { project: HomeProject
           <div className="w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-start justify-between gap-4">
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{title}</h3>
-              <button type="button" onClick={() => setOpen(false)} className="rounded bg-slate-200 px-3 py-1 text-sm dark:bg-slate-700 dark:text-white">Close</button>
+              <button type="button" onClick={() => setOpen(false)} className="rounded bg-slate-200 px-3 py-1 text-sm dark:bg-slate-700 dark:text-white">{t("close")}</button>
             </div>
 
             {project.image ? (

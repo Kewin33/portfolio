@@ -48,7 +48,7 @@ export default function HomeHeroSection({
 
           {mounted && adminRole === "admin" && (
             <div className="mt-6 flex items-center gap-3">
-              <a href={`/${locale}/admin`} className="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">Admin Panel</a>
+              <a href={`/${locale}/admin`} className="rounded bg-indigo-600 px-3 py-1 text-white hover:bg-indigo-700">{t("adminPanel")}</a>
             </div>
           )}
         </div>
@@ -60,7 +60,7 @@ export default function HomeHeroSection({
         </div>
       </div>
 
-      <a href="#about" className="absolute bottom-8 left-1/2 -translate-x-1/2 text-blue-700 transition hover:text-slate-900 dark:text-teal-200 dark:hover:text-white" aria-label="Scroll to about section">
+      <a href="#about" className="absolute bottom-8 left-1/2 -translate-x-1/2 text-blue-700 transition hover:text-slate-900 dark:text-teal-200 dark:hover:text-white" aria-label={t("scrollToAbout")}> 
         <ChevronDown size={34} />
       </a>
     </section>

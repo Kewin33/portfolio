@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from 'next-intl';
 import { toProjectImageSrc } from "@/utils/projectImages";
 import AdminImageModal from "./AdminImageModal";
 import AdminProjectForm from "./AdminProjectForm";
@@ -8,6 +9,7 @@ import AdminProjectRow from "./AdminProjectRow";
 import type { Project } from "./projectTypes";
 
 export default function AdminProjects() {
+  const t = useTranslations('Admin.projects');
   const [token] = useState<string>(() => (typeof window !== 'undefined' ? localStorage.getItem('token') || '' : ''));
   const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || '';
   const [projects, setProjects] = useState<Project[]>([]);
@@ -38,9 +40,9 @@ export default function AdminProjects() {
     try {
       const data = await api('/api/projects/');
       setProjects(data.projects || []);
-      setMessage('Loaded ' + (data.projects?.length ?? 0) + ' projects');
+      setMessage(t('messages.loadedCount', { count: data.projects?.length ?? 0 }));
     } catch (err: any) {
-      setMessage('Load failed: ' + err.message);
+      setMessage(t('messages.loadFailed', { error: err.message }));
     } finally { setLoading(false); }
   }
 
@@ -51,15 +53,15 @@ export default function AdminProjects() {
     try {
       if (proj.id) {
         await api(`/api/projects/${proj.id}`, { method: 'PATCH', body: JSON.stringify(proj) });
-        setMessage('Updated project');
+        setMessage(t('messages.updated'));
       } else {
         await api('/api/projects/', { method: 'POST', body: JSON.stringify(proj) });
-        setMessage('Created project');
+        setMessage(t('messages.created'));
       }
       setEditing(null);
       await load();
     } catch (err: any) {
-      setMessage('Save failed: ' + err.message);
+      setMessage(t('messages.saveFailed', { error: err.message }));
       throw err;
     } finally { setLoading(false); }
   }
@@ -71,10 +73,10 @@ export default function AdminProjects() {
         method: 'PUT',
         body: JSON.stringify({ items: nextProjects.map((project) => ({ id: project.id, index: project.index ?? 0 })) }),
       });
-      setMessage('Project order updated');
+      setMessage(t('messages.reorderUpdated'));
       await load();
     } catch (err: any) {
-      setMessage('Reorder failed: ' + err.message);
+      setMessage(t('messages.reorderFailed', { error: err.message }));
     }
   }
 
@@ -95,26 +97,26 @@ export default function AdminProjects() {
   }
 
   async function remove(id: string) {
-    if (!confirm('Delete this project?')) return;
+    if (!confirm(t('confirmDeleteProject'))) return;
     setLoading(true);
     try {
       await api(`/api/projects/${id}`, { method: 'DELETE' });
-      setMessage('Deleted');
+      setMessage(t('messages.deleted'));
       await load();
     } catch (err: any) {
-      setMessage('Delete failed: ' + err.message);
+      setMessage(t('messages.deleteFailed', { error: err.message }));
     } finally { setLoading(false); }
   }
 
   return (
     <div className="p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold mb-4 dark:text-white">Admin: Projects</h2>
+      <h2 className="text-2xl font-bold mb-4 dark:text-white">{t('title')}</h2>
 
       {/* Admin token is read from localStorage silently; UI removed per requirements */}
 
       <div className="flex gap-2 mb-4">
-        <button onClick={load} disabled={loading} className="px-3 py-1 bg-blue-700 text-white rounded text-sm disabled:opacity-50">Reload</button>
-        <button onClick={() => setEditing({ id: '', title: '' })} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">+ New Project</button>
+        <button onClick={load} disabled={loading} className="px-3 py-1 bg-blue-700 text-white rounded text-sm disabled:opacity-50">{t('actions.reload')}</button>
+        <button onClick={() => setEditing({ id: '', title: '' })} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">{t('actions.newProject')}</button>
       </div>
 
       {message && <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">{message}</p>}
@@ -131,7 +133,7 @@ export default function AdminProjects() {
       )}
 
       <ProjectSectionBlock
-        title="Main Projects"
+        title={t('sections.main')}
         projects={mainProjects}
         apiBase={API_BASE}
         draggedId={draggedId}
@@ -143,7 +145,7 @@ export default function AdminProjects() {
       />
 
       <ProjectSectionBlock
-        title="Other Projects"
+        title={t('sections.other')}
         projects={otherProjects}
         apiBase={API_BASE}
         draggedId={draggedId}
@@ -154,7 +156,7 @@ export default function AdminProjects() {
         onDrop={(project) => handleDrop(project.id, 'other')}
       />
 
-      {projects.length === 0 && !loading && <p className="text-sm text-slate-400">No projects yet.</p>}
+      {projects.length === 0 && !loading && <p className="text-sm text-slate-400">{t('noProjectsYet')}</p>}
 
       {selectedImage && (
         <AdminImageModal src={selectedImage.src} title={selectedImage.title} onClose={() => setSelectedImage(null)} />
@@ -184,6 +186,8 @@ function ProjectSectionBlock({
   onDragStart: (project: Project) => void;
   onDrop: (project: Project) => void;
 }) {
+  const t = useTranslations('Admin.projects');
+
   return (
     <div className="mb-8">
       <h3 className="mb-3 text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
@@ -201,7 +205,7 @@ function ProjectSectionBlock({
             isDragging={draggedId === project.id}
           />
         ))}
-        {projects.length === 0 && <p className="text-sm text-slate-400">No projects in this section.</p>}
+        {projects.length === 0 && <p className="text-sm text-slate-400">{t('noProjectsInSection')}</p>}
       </div>
     </div>
   );

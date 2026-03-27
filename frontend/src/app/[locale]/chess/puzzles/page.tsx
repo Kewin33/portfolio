@@ -172,7 +172,7 @@ export default function ChessPuzzlesPage() {
                 <span>
                   {t('trackingGuest')} {' '}
                   <Link href="/login" className="underline font-medium">
-                    Register
+                    {t('register')}
                   </Link>
                 </span>
               )}
@@ -187,7 +187,7 @@ export default function ChessPuzzlesPage() {
 
           {items.length > 0 && (
             <section>
-              <h2 className="text-xl font-semibold mb-3">Select a Puzzle :)</h2>
+              <h2 className="text-xl font-semibold mb-3">{t('selectPuzzle')}</h2>
               <CollectionGrid items={collectionItems} columns={6} variant="dense" />
             </section>
           )}
@@ -209,7 +209,7 @@ export default function ChessPuzzlesPage() {
                     type="button"
                     onClick={() => setPlayerOpen(false)}
                     className="rounded-lg border border-slate-300 dark:border-slate-700 p-2 hover:bg-slate-100 dark:hover:bg-slate-800"
-                    aria-label="Close puzzle"
+                    aria-label={t('closePuzzle')}
                   >
                     <X className="w-4 h-4" />
                   </button>

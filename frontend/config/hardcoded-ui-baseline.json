@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "updatedAt": "2026-03-27T23:02:57.074Z",
+  "findings": [
+    "src/components/chess/ChessBoardPane.tsx:108:Remove Piece Mode",
+    "src/components/home/HomeHeroSection.tsx:30:Alexander Chen.",
+    "src/components/survey/auswertung/SubquestionCard.js:25:SD",
+    "src/components/timeline/TagSelect.tsx:14:Tags"
+  ]
+}

@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Chess } from 'chess.js';
+import { useTranslations } from 'next-intl';
+import { Check, CircleHelp, RotateCcw, X } from 'lucide-react';
 import ChessBoardComponent from '@/components/chess/ChessBoard';
 import StockfishWorker from '@/hooks/chess/useStockfish';
 import { PuzzleItem, PuzzleProgress } from '@/components/chess/puzzles/types';
-import { findChildrenForPath, normalizePuzzleTree } from '@/components/chess/puzzles/tree';
+import { findChildrenForPath, maxTreeDepth, normalizePuzzleTree, pathExists } from '@/components/chess/puzzles/tree';
 
 interface PuzzlePlayerProps {
   puzzle: PuzzleItem;
@@ -32,6 +34,7 @@ interface CompareNode {
 }
 
 export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSolved, showDescription = false }: PuzzlePlayerProps) {
+  const t = useTranslations('ChessPuzzles.player');
   const [fen, setFen] = useState(puzzle.initialFen);
   const [flowTree, setFlowTree] = useState<FlowNode[]>([]);
   const [lineMoves, setLineMoves] = useState<string[]>([]);
@@ -41,9 +44,16 @@ export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSo
   const [feedback, setFeedback] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showSolution, setShowSolution] = useState(false);
+  const [helpModalOpen, setHelpModalOpen] = useState(false);
+  const [confirmPopupOpen, setConfirmPopupOpen] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState<'success' | 'error'>('success');
+  const [unsolvedCriticalWarning, setUnsolvedCriticalWarning] = useState(false);
 
   const workerRef = useRef<StockfishWorker | null>(null);
   const solutionTree = useMemo(() => normalizePuzzleTree(puzzle), [puzzle]);
+  const solutionMaxDepth = useMemo(() => maxTreeDepth(solutionTree), [solutionTree]);
 
   useEffect(() => {
     if (!workerRef.current) {
@@ -69,6 +79,8 @@ export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSo
     setUserDepth(0);
     setFeedback('');
     setSubmitting(false);
+    setHelpModalOpen(false);
+    setConfirmPopupOpen(false);
   }, [puzzle.id, puzzle.initialFen]);
 
   const cloneNodes = (nodes: FlowNode[]): FlowNode[] =>
@@ -212,11 +224,12 @@ export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSo
     const moveUci = (moveUciRaw || '').toLowerCase();
 
     if (pendingCriticalPaths.length > 0) {
-      setFeedback('Select one critical move node first.');
+      setFeedback(t('feedback.selectCriticalNodeFirst'));
       return;
     }
     const nextLineMoves = [...lineMoves, moveUci];
     const solutionChildren = findChildrenForPath(solutionTree, nextLineMoves);
+    const inSolutionPath = pathExists(solutionTree, nextLineMoves);
 
     let createdUserPath: number[] = [];
     let createdCriticalPaths: number[][] = [];
@@ -260,30 +273,33 @@ export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSo
       return;
     }
 
-    const stockfishMoves = await findCriticalMoves(nextFen);
-    if (stockfishMoves.length > 0) {
-      let stockfishPaths: number[][] = [];
-      setFlowTree((prev) => {
-        const next = cloneNodes(prev);
-        if (!createdUserPath.length) return prev;
-        stockfishPaths = stockfishMoves
-          .map((uci) =>
-            pushChild(next, createdUserPath, {
-              moveUci: uci,
-              source: 'stockfish',
-              children: [],
-            }),
-          )
-          .filter((path) => path.length > 0);
-        return next;
-      });
-      if (stockfishPaths.length) {
-        setPendingCriticalPaths(stockfishPaths);
-      } else {
-        setPendingCriticalPaths([]);
+    const shouldUseStockfishFallback = !inSolutionPath && nextLineMoves.length < solutionMaxDepth;
+    if (shouldUseStockfishFallback) {
+      const stockfishMoves = await findCriticalMoves(nextFen);
+      if (stockfishMoves.length > 0) {
+        let stockfishPaths: number[][] = [];
+        setFlowTree((prev) => {
+          const next = cloneNodes(prev);
+          if (!createdUserPath.length) return prev;
+          stockfishPaths = stockfishMoves
+            .map((uci) =>
+              pushChild(next, createdUserPath, {
+                moveUci: uci,
+                source: 'stockfish',
+                children: [],
+              }),
+            )
+            .filter((path) => path.length > 0);
+          return next;
+        });
+        if (stockfishPaths.length) {
+          setPendingCriticalPaths(stockfishPaths);
+        } else {
+          setPendingCriticalPaths([]);
+        }
+        setFeedback('');
+        return;
       }
-      setFeedback('');
-      return;
     }
 
     setPendingCriticalPaths([]);
@@ -302,7 +318,7 @@ export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSo
     setUserDepth(branchUserDepth);
     setActivePath(path);
     setPendingCriticalPaths([]);
-    setFeedback('Node selected. Continue from this position.');
+    setFeedback(t('feedback.nodeSelected'));
   };
 
   const onDeleteUserNode = (path: number[]) => {
@@ -349,37 +365,62 @@ export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSo
     setFen(nextFen);
     setUserDepth(nextDepth);
     setPendingCriticalPaths([]);
-    setFeedback('User node deleted.');
+    setFeedback(t('feedback.userNodeDeleted'));
   };
 
-  const onConfirm = async () => {
-    if (submitting) return;
-    setSubmitting(true);
-
-    const reallySure = window.confirm('Do you really think that after every path you are better?');
-    if (!reallySure) {
-      setSubmitting(false);
+  const onConfirm = () => {
+    if (submitting || userDepth === 0) return;
+    
+    // Check if there are still unresolved critical paths
+    if (pendingCriticalPaths.length > 0) {
+      setUnsolvedCriticalWarning(true);
       return;
     }
+    
+    setConfirmPopupOpen(true);
+  };
+
+  const runConfirmEvaluation = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setConfirmPopupOpen(false);
 
     const solved = treesEqual(toCompareNodes(flowTree), toCompareNodes(solutionTree));
     if (solved) {
-      setFeedback(labels.solved);
+      setToastMessage(labels.solved);
+      setToastType('success');
+      setToastOpen(true);
+      setTimeout(() => setToastOpen(false), 3000);
       await onSolved(puzzle.id);
       setSubmitting(false);
       return;
     }
 
-    setFeedback('Das stimmt nicht.');
-    setShowSolution(true);
+    setToastMessage(t('feedback.confirmWrong'));
+    setToastType('error');
+    setToastOpen(true);
+    setTimeout(() => setToastOpen(false), 3000);
     setSubmitting(false);
   };
 
   const canPlayBoard = pendingCriticalPaths.length === 0;
 
+  const resetAttempt = () => {
+    setFen(puzzle.initialFen);
+    setFlowTree([]);
+    setLineMoves([]);
+    setActivePath([]);
+    setPendingCriticalPaths([]);
+    setUserDepth(0);
+    setFeedback('');
+    setShowSolution(false);
+    setConfirmPopupOpen(false);
+    setHelpModalOpen(false);
+  };
+
   const instructionMessage = canPlayBoard
-    ? 'Play a move on the board.'
-    : 'Select one generated node.';
+    ? t('instruction.playMove')
+    : t('instruction.selectGeneratedNode');
 
   return (
     <div>
@@ -388,20 +429,95 @@ export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSo
           <p className="text-sm text-slate-700 dark:text-slate-300">{puzzle.description}</p>
         </div>
       )}
+      
+      {/* Toast Notification */}
+      {toastOpen && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-40 animate-in slide-in-from-top-2 fade-in-0 duration-300">
+          <div className={`rounded-lg px-4 py-3 text-sm font-medium text-white shadow-lg ${
+            toastType === 'success' 
+              ? 'bg-emerald-600' 
+              : 'bg-red-600'
+          }`}>
+            {toastMessage}
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        <div className="rounded-xl border border-slate-300 dark:border-slate-700 p-3">
-          <div className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-2">
-            {showSolution ? 'Solution tree (correct)' : instructionMessage}
+        <div className="rounded-xl border border-slate-300 dark:border-slate-700 p-3 flex flex-col min-h-0">
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <div className="text-base font-semibold text-slate-700 dark:text-slate-200">
+              {showSolution ? t('instruction.solutionTreeCorrect') : instructionMessage}
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                className="rounded border p-1.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                onClick={() => setHelpModalOpen(true)}
+                title={t('actions.help')}
+                aria-label={t('actions.help')}
+              >
+                <CircleHelp size={16} />
+              </button>
+              <button
+                type="button"
+                className="rounded border p-1.5 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                onClick={resetAttempt}
+                title={t('actions.reset')}
+                aria-label={t('actions.reset')}
+              >
+                <RotateCcw size={16} />
+              </button>
+            </div>
           </div>
 
-          <UserTreeGraph
-            nodes={showSolution ? puzzleNodesToFlowNodes(solutionTree) : flowTree}
-            selectedPath={activePath}
-            clickablePaths={showSolution ? [] : pendingCriticalPaths}
-            onNodeClick={showSolution ? () => {} : onNodeClick}
-            onDeleteNode={showSolution ? () => {} : onDeleteUserNode}
-            isSolution={showSolution}
-          />
+
+
+          <div className="flex-1 overflow-y-auto mb-3">
+            <UserTreeGraph
+              nodes={showSolution ? puzzleNodesToFlowNodes(solutionTree) : flowTree}
+              selectedPath={activePath}
+              clickablePaths={showSolution ? [] : pendingCriticalPaths}
+              onNodeClick={showSolution ? () => {} : onNodeClick}
+              onDeleteNode={showSolution ? () => {} : onDeleteUserNode}
+              isSolution={showSolution}
+              rootFen={puzzle.initialFen}
+              labels={{
+                sourceUser: t('source.user'),
+                sourceCritical: t('source.critical'),
+                deleteNode: t('actions.deleteNode'),
+              }}
+            />
+          </div>
+
+          <div className="mt-auto flex items-center justify-between gap-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+            {!showSolution && (
+              <span
+                role="button"
+                tabIndex={0}
+                className="text-xs text-slate-400 dark:text-slate-500 cursor-pointer hover:text-slate-500 dark:hover:text-slate-400 transition-colors"
+                onClick={() => setShowSolution(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setShowSolution(true);
+                  }
+                }}
+              >
+                {t('actions.solution')}
+              </span>
+            )}
+            <button
+              className="rounded border px-3 py-2 bg-emerald-600 text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium hover:bg-emerald-700"
+              onClick={() => void onConfirm()}
+              disabled={submitting || userDepth === 0}
+              title={t('actions.verify')}
+              aria-label={t('actions.verify')}
+            >
+              <Check size={16} />
+              {t('actions.verify')}
+            </button>
+          </div>
         </div>
 
         <div className={`rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 ${!canPlayBoard ? 'pointer-events-none opacity-90' : ''}`}>
@@ -419,68 +535,81 @@ export default function PuzzlePlayer({ puzzle, progress: _progress, labels, onSo
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <div className="text-sm text-slate-600 dark:text-slate-300">
-          user moves {userDepth}
-        </div>
-        <div className="flex items-center gap-3">
-          <div
-            className={`text-sm font-medium ${
-              feedback === labels.solved
-                ? 'text-emerald-600'
-                : feedback === 'Das stimmt nicht.'
-                  ? 'text-red-600'
-                  : feedback
-                  ? 'text-slate-600 dark:text-slate-300'
-                  : 'text-slate-500'
-            }`}
-          >
-            {feedback || '\u00a0'}
+      {/* Unsolved Critical Warning Modal */}
+      {unsolvedCriticalWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+            <div className="text-sm font-semibold text-amber-700 dark:text-amber-200 mb-2">⚠️ {t('actions.warning')}</div>
+            <div className="text-sm text-slate-600 dark:text-slate-300 mb-4">{t('feedback.unsolvedCritical')}</div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="rounded border px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200"
+                onClick={() => setUnsolvedCriticalWarning(false)}
+                title={t('actions.cancel')}
+                aria-label={t('actions.cancel')}
+              >
+                {t('actions.cancel')}
+              </button>
+            </div>
           </div>
-          {!showSolution ? (
-            <>
-              <button
-                className="rounded border px-3 py-2 bg-emerald-600 text-white disabled:opacity-50"
-                onClick={() => void onConfirm()}
-                disabled={submitting || userDepth === 0}
-              >
-                confirm
-              </button>
-              <button
-                className="rounded border px-3 py-2"
-                onClick={() => {
-                  setFen(puzzle.initialFen);
-                  setFlowTree([]);
-                  setLineMoves([]);
-                  setActivePath([]);
-                  setPendingCriticalPaths([]);
-                  setUserDepth(0);
-                  setFeedback('');
-                  setShowSolution(false);
-                }}
-              >
-                reset
-              </button>
-            </>
-          ) : (
-            <button
-              className="rounded border px-3 py-2 bg-blue-600 text-white"
-              onClick={() => {
-                setShowSolution(false);
-                setFen(puzzle.initialFen);
-                setFlowTree([]);
-                setLineMoves([]);
-                setActivePath([]);
-                setPendingCriticalPaths([]);
-                setUserDepth(0);
-                setFeedback('');
-              }}
-            >
-              try again
-            </button>
-          )}
         </div>
-      </div>
+      )}
+
+      {/* Help Modal */}
+      {helpModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+            <h3 className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-3">{t('actions.help')}</h3>
+            <div className="space-y-2 mb-4 text-sm text-slate-700 dark:text-slate-200">
+              <div><strong>1.</strong> {t('help.step1')}</div>
+              <div><strong>2.</strong> {t('help.step2')}</div>
+              <div><strong>3.</strong> {t('help.step3')}</div>
+              <div><strong>4.</strong> {t('help.step4')}</div>
+              <div><strong>5.</strong> {t('help.step5')}</div>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                className="rounded border px-3 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                onClick={() => setHelpModalOpen(false)}
+                title={t('actions.cancel')}
+                aria-label={t('actions.cancel')}
+              >
+                {t('actions.cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {confirmPopupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+            <div className="text-sm text-slate-700 dark:text-slate-200 mb-4">{t('confirmPrompt')}</div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className="rounded border p-2"
+                onClick={() => setConfirmPopupOpen(false)}
+                title={t('actions.cancel')}
+                aria-label={t('actions.cancel')}
+              >
+                <X size={16} />
+              </button>
+              <button
+                type="button"
+                className="rounded border p-2 bg-emerald-600 text-white"
+                onClick={() => void runConfirmEvaluation()}
+                title={t('actions.confirm')}
+                aria-label={t('actions.confirm')}
+              >
+                <Check size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -492,9 +621,15 @@ interface UserTreeGraphProps {
   onNodeClick: (path: number[]) => void;
   onDeleteNode: (path: number[]) => void;
   isSolution?: boolean;
+  rootFen: string;
+  labels: {
+    sourceUser: string;
+    sourceCritical: string;
+    deleteNode: string;
+  };
 }
 
-function UserTreeGraph({ nodes, selectedPath, clickablePaths, onNodeClick, onDeleteNode, isSolution = false }: UserTreeGraphProps) {
+function UserTreeGraph({ nodes, selectedPath, clickablePaths, onNodeClick, onDeleteNode, isSolution = false, rootFen, labels }: UserTreeGraphProps) {
   if (!nodes.length) return <div className="h-6" />;
   return (
     <div className="overflow-auto py-2">
@@ -507,17 +642,31 @@ function UserTreeGraph({ nodes, selectedPath, clickablePaths, onNodeClick, onDel
           onNodeClick={onNodeClick}
           onDeleteNode={onDeleteNode}
           isSolution={isSolution}
+          currentFen={rootFen}
+          labels={labels}
         />
       </div>
     </div>
   );
 }
 
-interface UserTreeRowProps extends UserTreeGraphProps {
+interface UserTreeRowProps {
+  nodes: FlowNode[];
+  selectedPath: number[];
+  clickablePaths: number[][];
+  onNodeClick: (path: number[]) => void;
+  onDeleteNode: (path: number[]) => void;
+  isSolution?: boolean;
   path: number[];
+  currentFen: string;
+  labels: {
+    sourceUser: string;
+    sourceCritical: string;
+    deleteNode: string;
+  };
 }
 
-function UserTreeRow({ nodes, path, selectedPath, clickablePaths, onNodeClick, onDeleteNode, isSolution = false }: UserTreeRowProps) {
+function UserTreeRow({ nodes, path, selectedPath, clickablePaths, onNodeClick, onDeleteNode, isSolution = false, currentFen, labels }: UserTreeRowProps) {
   return (
     <div className="flex items-start justify-center gap-6">
       {nodes.map((node, idx) => {
@@ -525,11 +674,14 @@ function UserTreeRow({ nodes, path, selectedPath, clickablePaths, onNodeClick, o
         const selected = samePath(currentPath, selectedPath);
         const clickable = clickablePaths.some((p) => samePath(p, currentPath));
         const hasChildren = (node.children || []).length > 0;
+        const moveInfo = uciToSanAndFen(currentFen, node.moveUci);
+        const moveLabel = moveInfo.san || node.moveUci;
+        const nextFen = moveInfo.fen || currentFen;
         const sourceClass =
           node.source === 'user'
             ? 'border-slate-300 dark:border-slate-700'
             : 'border-blue-500/70 bg-blue-50/50 dark:bg-blue-950/20';
-        const sourceLabel = node.source === 'user' ? 'user' : 'critical';
+        const sourceLabel = node.source === 'user' ? labels.sourceUser : labels.sourceCritical;
 
         return (
           <div key={currentPath.join('.')} className="flex flex-col items-center">
@@ -546,7 +698,7 @@ function UserTreeRow({ nodes, path, selectedPath, clickablePaths, onNodeClick, o
               }}
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="font-mono text-sm">{node.moveUci}</div>
+                <div className="font-mono text-sm">{moveLabel}</div>
                 {node.source === 'user' && (
                   <button
                     type="button"
@@ -555,6 +707,7 @@ function UserTreeRow({ nodes, path, selectedPath, clickablePaths, onNodeClick, o
                       e.stopPropagation();
                       onDeleteNode(currentPath);
                     }}
+                    aria-label={labels.deleteNode}
                   >
                     x
                   </button>
@@ -574,6 +727,8 @@ function UserTreeRow({ nodes, path, selectedPath, clickablePaths, onNodeClick, o
                 onNodeClick={onNodeClick}
                 onDeleteNode={onDeleteNode}
                 isSolution={isSolution}
+                currentFen={nextFen}
+                labels={labels}
               />
             )}
           </div>
@@ -612,4 +767,23 @@ function treesEqual(a: CompareNode[], b: CompareNode[]): boolean {
     if (!treesEqual(a[i].children, b[i].children)) return false;
   }
   return true;
+}
+
+function parseUciMove(uci: string) {
+  return {
+    from: uci.slice(0, 2),
+    to: uci.slice(2, 4),
+    promotion: uci.length > 4 ? uci[4] : undefined,
+  };
+}
+
+function uciToSanAndFen(startFen: string, uci: string): { san: string; fen: string } {
+  try {
+    const game = new Chess(startFen);
+    const result = game.move(parseUciMove((uci || '').toLowerCase()));
+    if (!result) return { san: uci, fen: startFen };
+    return { san: result.san, fen: game.fen() };
+  } catch {
+    return { san: uci, fen: startFen };
+  }
 }

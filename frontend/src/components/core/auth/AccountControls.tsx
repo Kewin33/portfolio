@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Languages, LogIn, LogOut, Moon, Sun, User } from 'lucide-react';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link, usePathname, useRouter } from '@/i18n/routing';
 import { useUser } from '@/hooks/auth/useUser';
 
@@ -14,6 +14,7 @@ interface AccountControlsProps {
 }
 
 export default function AccountControls({ variant = 'topbar', className = '' }: AccountControlsProps) {
+  const t = useTranslations('AccountControls');
   const { user, loading } = useUser();
   const locale = useLocale();
   const pathname = usePathname();
@@ -89,12 +90,12 @@ export default function AccountControls({ variant = 'topbar', className = '' }: 
 
   return (
     <div className={`${wrapClass} ${className}`.trim()}>
-      <button type="button" onClick={toggleTheme} className={btnClass} aria-label="Toggle theme">
+      <button type="button" onClick={toggleTheme} className={btnClass} aria-label={t('toggleTheme')}>
         {darkMode ? <Moon size={compact ? 14 : 16} /> : <Sun size={compact ? 14 : 16} />}
-        <span>{darkMode ? 'Dark' : 'Light'}</span>
+        <span>{darkMode ? t('dark') : t('light')}</span>
       </button>
 
-      <button type="button" onClick={switchLocale} className={btnClass} aria-label="Switch language">
+      <button type="button" onClick={switchLocale} className={btnClass} aria-label={t('switchLanguage')}>
         <Languages size={compact ? 14 : 16} />
         <span>{locale === 'en' ? 'DE' : 'EN'}</span>
       </button>
@@ -105,17 +106,17 @@ export default function AccountControls({ variant = 'topbar', className = '' }: 
         <>
           <div className={`${compact ? 'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs leading-none' : 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm'} border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80`}>
             <User size={compact ? 14 : 16} />
-            <span className="font-medium">{username || 'user'}</span>
+            <span className="font-medium">{username || t('userFallback')}</span>
           </div>
-          <button type="button" onClick={logout} className={btnClass} aria-label="Logout">
+          <button type="button" onClick={logout} className={btnClass} aria-label={t('logout')}>
             <LogOut size={compact ? 14 : 16} />
-            <span>Logout</span>
+            <span>{t('logout')}</span>
           </button>
         </>
       ) : (
-        <Link href="/login" className={btnClass} aria-label="Login">
+        <Link href="/login" className={btnClass} aria-label={t('login')}>
           <LogIn size={compact ? 14 : 16} />
-          <span>Login</span>
+          <span>{t('login')}</span>
         </Link>
       )}
     </div>

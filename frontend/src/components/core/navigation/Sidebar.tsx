@@ -82,9 +82,9 @@ export default function Sidebar() {
             >
               <div className="flex justify-between items-center mb-12">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">My portfolio</h2>
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('portfolioTitle')}</h2>
                   {role && (
-                    <div className="text-sm text-gray-600 dark:text-gray-400">Role: {role}</div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">{t('roleLabel')}: {role}</div>
                   )}
                 </div>
                 <button 

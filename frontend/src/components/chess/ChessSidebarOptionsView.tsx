@@ -1,5 +1,7 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
+
 interface ChessSidebarOptionsViewProps {
   engineEnabled: boolean;
   editMode: boolean;
@@ -31,6 +33,7 @@ export default function ChessSidebarOptionsView({
   onToggleEditMode,
   onReset,
 }: ChessSidebarOptionsViewProps) {
+  const t = useTranslations('ChessSidebar');
   const depthSteps = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30];
   const lineSteps = [1, 2, 3, 4, 5];
   const threadSteps = [1, 2, 4, 6, 8, 12, 16];
@@ -54,7 +57,7 @@ export default function ChessSidebarOptionsView({
   return (
     <div className="p-4 space-y-4 min-h-[420px] bg-gray-50/70 dark:bg-gray-800/30">
       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 space-y-3">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Optionen</p>
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{t('sections.options')}</p>
 
         <button
           onClick={onToggleEngine}
@@ -64,7 +67,7 @@ export default function ChessSidebarOptionsView({
               : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
           }`}
         >
-          Engine {engineEnabled ? 'aktiv' : 'aus'}
+          {t('options.engine', { status: engineEnabled ? t('state.active') : t('state.off') })}
         </button>
 
         <button
@@ -75,23 +78,23 @@ export default function ChessSidebarOptionsView({
               : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'
           }`}
         >
-          Stellung aufbauen {editMode ? '(aktiv)' : ''}
+          {t('options.setupPosition')} {editMode ? `(${t('state.active')})` : ''}
         </button>
 
         <button
           onClick={onReset}
           className="w-full px-3 py-2 rounded text-left bg-red-100 dark:bg-red-900/30 text-red-600 hover:bg-red-200"
         >
-          Reset Board
+          {t('actions.resetBoard')}
         </button>
       </div>
 
       <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 space-y-3">
-        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Analyse</p>
+        <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{t('sections.analysis')}</p>
 
         <label className="block text-xs text-gray-500">
           <div className="mb-1 flex items-center justify-between">
-            <span>Depth</span>
+            <span>{t('controls.depth')}</span>
             <span className="font-mono">{analysisDepth}</span>
           </div>
           <input
@@ -107,7 +110,7 @@ export default function ChessSidebarOptionsView({
 
         <label className="block text-xs text-gray-500">
           <div className="mb-1 flex items-center justify-between">
-            <span>Lines</span>
+            <span>{t('controls.lines')}</span>
             <span className="font-mono">{multiPv}</span>
           </div>
           <input
@@ -123,7 +126,7 @@ export default function ChessSidebarOptionsView({
 
         <label className="block text-xs text-gray-500">
           <div className="mb-1 flex items-center justify-between">
-            <span>Threads</span>
+            <span>{t('controls.threads')}</span>
             <span className="font-mono">{threads}</span>
           </div>
           <input
@@ -139,7 +142,7 @@ export default function ChessSidebarOptionsView({
 
         <label className="block text-xs text-gray-500">
           <div className="mb-1 flex items-center justify-between">
-            <span>Memory (MB)</span>
+            <span>{t('controls.memoryMb')}</span>
             <span className="font-mono">{hashMb} MB</span>
           </div>
           <input

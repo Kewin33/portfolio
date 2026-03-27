@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Settings } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface EngineLine {
   multipv: number;
@@ -64,6 +65,7 @@ export default function ChessSidebarAnalysisView({
   onHashMbChange,
   onGoToMove,
 }: ChessSidebarAnalysisViewProps) {
+  const t = useTranslations('ChessSidebar');
   const [expandedLines, setExpandedLines] = useState<Record<number, boolean>>({});
 
   const depthSteps = [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30];
@@ -96,7 +98,7 @@ export default function ChessSidebarAnalysisView({
   }
 
   const sourceLabel =
-    analysisSource === 'cloud' ? 'Cloud' : analysisSource === 'local' ? 'Local' : 'Idle';
+    analysisSource === 'cloud' ? t('source.cloud') : analysisSource === 'local' ? t('source.local') : t('source.idle');
   const sourceClasses =
     analysisSource === 'cloud'
       ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300'
@@ -126,7 +128,7 @@ export default function ChessSidebarAnalysisView({
               className={`w-11 h-5 rounded-full relative transition-colors ${
                 engineEnabled ? 'bg-violet-600' : 'bg-gray-400'
               }`}
-              aria-label="Toggle engine"
+              aria-label={t('actions.toggleEngine')}
             >
               <div
                 className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${
@@ -142,7 +144,7 @@ export default function ChessSidebarAnalysisView({
               </p>
               {engineEnabled && (
                 <div className="flex items-center gap-2 text-[11px] text-gray-600 dark:text-gray-300 whitespace-nowrap">
-                  <span>Depth {engineDepth || '-'}</span>
+                  <span>{t('controls.depth')} {engineDepth || '-'}</span>
                   <span>|</span>
                   <span>{engineNpsMn}</span>
                   <span className={`rounded px-1.5 py-0.5 font-semibold ${sourceClasses}`}>{sourceLabel}</span>
@@ -153,7 +155,7 @@ export default function ChessSidebarAnalysisView({
             <button
               onClick={onToggleSettings}
               className="ml-auto h-7 w-7 flex items-center justify-center rounded-md text-violet-700 dark:text-violet-300 hover:bg-violet-100/70 dark:hover:bg-violet-900/40"
-              aria-label="Engine settings"
+              aria-label={t('actions.engineSettings')}
             >
               <Settings className="h-4 w-4" />
             </button>
@@ -166,7 +168,7 @@ export default function ChessSidebarAnalysisView({
               <div className="space-y-3 text-xs">
                 <label className="block text-gray-600 dark:text-gray-300">
                   <div className="mb-1 flex items-center justify-between">
-                    <span>Depth</span>
+                    <span>{t('controls.depth')}</span>
                     <span className="font-mono">{analysisDepth}</span>
                   </div>
                   <input
@@ -181,7 +183,7 @@ export default function ChessSidebarAnalysisView({
                 </label>
                 <label className="block text-gray-600 dark:text-gray-300">
                   <div className="mb-1 flex items-center justify-between">
-                    <span>Lines</span>
+                    <span>{t('controls.lines')}</span>
                     <span className="font-mono">{multiPv}</span>
                   </div>
                   <input
@@ -196,7 +198,7 @@ export default function ChessSidebarAnalysisView({
                 </label>
                 <label className="block text-gray-600 dark:text-gray-300">
                   <div className="mb-1 flex items-center justify-between">
-                    <span>Threads</span>
+                    <span>{t('controls.threads')}</span>
                     <span className="font-mono">{threads}</span>
                   </div>
                   <input
@@ -211,7 +213,7 @@ export default function ChessSidebarAnalysisView({
                 </label>
                 <label className="block text-gray-600 dark:text-gray-300">
                   <div className="mb-1 flex items-center justify-between">
-                    <span>Memory (MB)</span>
+                    <span>{t('controls.memoryMb')}</span>
                     <span className="font-mono">{hashMb} MB</span>
                   </div>
                   <input
@@ -256,7 +258,7 @@ export default function ChessSidebarAnalysisView({
                           }))
                         }
                         className="h-5 w-5 rounded text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/40"
-                        aria-label={isExpanded ? 'Collapse line' : 'Expand line'}
+                        aria-label={isExpanded ? t('actions.collapseLine') : t('actions.expandLine')}
                       >
                         {isExpanded ? '▴' : '▾'}
                       </button>
@@ -306,7 +308,7 @@ export default function ChessSidebarAnalysisView({
           </div>
         ))}
         {moves.length === 0 && (
-          <span className="text-gray-400 italic p-2 text-center block">No moves yet</span>
+          <span className="text-gray-400 italic p-2 text-center block">{t('noMovesYet')}</span>
         )}
       </div>
 

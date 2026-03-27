@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { PuzzleMoveNode } from '@/components/chess/puzzles/types';
 
 interface AdminTreeGraphProps {
@@ -19,8 +20,10 @@ export default function AdminTreeGraph({
   onAddChild,
   onRemove,
 }: AdminTreeGraphProps) {
+  const t = useTranslations('ChessPuzzles.admin');
+
   if (!nodes.length) {
-    return <div className="text-sm text-slate-500">No critical moves yet.</div>;
+    return <div className="text-sm text-slate-500">{t('noCriticalMovesYet')}</div>;
   }
 
   return (
@@ -53,6 +56,8 @@ function TreeRow({
   onAddChild,
   onRemove,
 }: TreeRowProps) {
+  const t = useTranslations('ChessPuzzles.admin');
+
   return (
     <div className="flex items-start justify-center gap-6">
       {nodes.map((node, idx) => {
@@ -65,7 +70,7 @@ function TreeRow({
             <div className={`rounded-xl border p-2 w-52 bg-white/80 dark:bg-slate-900/80 ${selected ? 'border-blue-500' : 'border-slate-300 dark:border-slate-700'}`}>
               <div className="flex gap-1 mb-2">
                 <button className="text-xs rounded border px-2 py-1" onClick={() => onSelectPath(currentPath)}>
-                  select
+                  {t('select')}
                 </button>
                 <button className="text-xs rounded border px-2 py-1" onClick={() => onAddChild(currentPath)}>
                   +
@@ -77,7 +82,7 @@ function TreeRow({
               <input
                 value={node.moveUci}
                 onChange={(e) => onUpdateMove(currentPath, e.target.value)}
-                placeholder="uci move"
+                placeholder={t('uciMovePlaceholder')}
                 className="w-full rounded border px-2 py-1 bg-transparent text-sm"
               />
             </div>

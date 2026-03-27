@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { ChevronDown } from "lucide-react";
+import { useTranslations } from 'next-intl';
 
 type IconItem = {
   src: string;
@@ -16,6 +17,7 @@ export default function TechIconSelect({
   value: string[];
   onChange: (next: string[]) => void;
 }) {
+  const t = useTranslations('Admin.projects.form.techIcons');
   const [icons, setIcons] = useState<IconItem[]>([]);
   const [query, setQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
@@ -49,7 +51,7 @@ export default function TechIconSelect({
 
   return (
     <div className="space-y-2">
-      <label className="text-xs text-slate-500 dark:text-slate-400">Tech Icons</label>
+      <label className="text-xs text-slate-500 dark:text-slate-400">{t('label')}</label>
       <div className="flex gap-2">
         <div className="relative flex-1">
           <button
@@ -59,7 +61,7 @@ export default function TechIconSelect({
             aria-haspopup="listbox"
             aria-expanded={showSearch}
           >
-            <span className="text-sm text-slate-800 dark:text-slate-200">Select icon</span>
+            <span className="text-sm text-slate-800 dark:text-slate-200">{t('selectIcon')}</span>
             <ChevronDown size={16} className={`transition-transform ${showSearch ? 'rotate-180' : ''}`} />
           </button>
 
@@ -71,7 +73,7 @@ export default function TechIconSelect({
                   autoFocus
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search icons..."
+                  placeholder={t('searchPlaceholder')}
                   className="w-full rounded px-2 py-1 text-sm dark:bg-slate-800 dark:text-white"
                   onBlur={() => setTimeout(() => setShowSearch(false), 150)}
                 />
@@ -79,7 +81,7 @@ export default function TechIconSelect({
 
               <div className="max-h-[280px] overflow-auto">
                 {filteredAvailable.length === 0 && (
-                  <div className="p-2 text-sm text-slate-500">No results</div>
+                  <div className="p-2 text-sm text-slate-500">{t('noResults')}</div>
                 )}
                 {filteredAvailable.map((icon) => (
                   <button
@@ -113,7 +115,7 @@ export default function TechIconSelect({
               type="button"
               onClick={() => removeIcon(src)}
               className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs dark:border-slate-600 dark:bg-slate-800 dark:text-white"
-              title="Remove icon"
+              title={t('removeIcon')}
             >
               <Image src={src} alt={icon?.label || src} width={16} height={16} className="h-4 w-4" />
               <span>{icon?.label || src.split("/").pop()?.split(".")[0] || src}</span>

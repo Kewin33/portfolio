@@ -2,6 +2,7 @@
 
 import { X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 type ExplorerTab = 'masters' | 'lichess' | 'player';
 type ExplorerMode = 'opening' | 'tablebase';
@@ -105,6 +106,7 @@ export default function ChessSidebarExplorerPanel({
   onPlayUciMove,
   onClose,
 }: ChessSidebarExplorerPanelProps) {
+  const t = useTranslations('ChessSidebar.explorer');
   const pieceCount = useMemo(() => countPieces(currentFen), [currentFen]);
   const mode: ExplorerMode = pieceCount <= 7 ? 'tablebase' : 'opening';
   const [tab, setTab] = useState<ExplorerTab>('masters');
@@ -123,7 +125,7 @@ export default function ChessSidebarExplorerPanel({
     const trimmedPlayer = playerName.trim();
     if (mode === 'opening' && tab === 'player' && trimmedPlayer.length < 2) {
       setOpeningData(null);
-      setError('Bitte gib einen Lichess-Nutzernamen ein.');
+      setError(t('errors.enterLichessUsername'));
       return;
     }
 
@@ -171,12 +173,12 @@ export default function ChessSidebarExplorerPanel({
   return (
     <div className="explorer-scrollbar absolute inset-x-0 bottom-16 h-[50%] z-50 border-t border-violet-200 dark:border-violet-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur p-3 shadow-[0_-10px_24px_rgba(0,0,0,0.24)] overflow-auto">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-semibold text-violet-700 dark:text-violet-300">Explorer</p>
+        <p className="text-sm font-semibold text-violet-700 dark:text-violet-300">{t('title')}</p>
         <button
           type="button"
           onClick={onClose}
           className="h-7 w-7 flex items-center justify-center rounded bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
-          aria-label="Explorer schliessen"
+          aria-label={t('actions.close')}
         >
           <X className="h-4 w-4" />
         </button>
@@ -207,7 +209,7 @@ export default function ChessSidebarExplorerPanel({
                 value={playerName}
                 onChange={(e) => setPlayerName(e.target.value)}
                 className="w-full px-2 py-1 rounded border border-gray-300 dark:border-gray-700 dark:bg-gray-800 text-xs"
-                placeholder="Lichess Username"
+                placeholder={t('player.usernamePlaceholder')}
               />
               <button
                 type="button"
@@ -218,7 +220,7 @@ export default function ChessSidebarExplorerPanel({
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                 }`}
               >
-                White
+                {t('player.white')}
               </button>
               <button
                 type="button"
@@ -229,11 +231,11 @@ export default function ChessSidebarExplorerPanel({
                     : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                 }`}
               >
-                Black
+                {t('player.black')}
               </button>
               {loading && (
                 <span className="text-[11px] text-violet-700 dark:text-violet-300 animate-pulse whitespace-nowrap">
-                  lädt...
+                  {t('loading')}
                 </span>
               )}
             </div>
@@ -244,9 +246,9 @@ export default function ChessSidebarExplorerPanel({
               className={`${tableGridClass} px-2 text-[10px] uppercase tracking-wide text-gray-500`}
               style={tableGridStyle}
             >
-              <span>Zug</span>
-              <span className="text-[10px]">#Partien</span>
-              <span>Weiss/Remis/Schwarz</span>
+              <span>{t('tableHeaders.move')}</span>
+              <span className="text-[10px]">{t('tableHeaders.games')}</span>
+              <span>{t('tableHeaders.wdw')}</span>
             </div>
             {(openingData?.moves || []).slice(0, 10).map((move) => {
               const sum = (move.white || 0) + (move.draws || 0) + (move.black || 0);
@@ -313,7 +315,7 @@ export default function ChessSidebarExplorerPanel({
               );
             })}
             {!loading && !error && (openingData?.moves || []).length === 0 && (
-              <p className="text-xs text-gray-500">Keine Daten fuer diese Stellung.</p>
+              <p className="text-xs text-gray-500">{t('noDataForPosition')}</p>
             )}
           </div>
         </>
@@ -323,8 +325,8 @@ export default function ChessSidebarExplorerPanel({
         <>
           <p className="mt-3 text-xs text-gray-600 dark:text-gray-300">
             {pieceCount <= 7
-              ? 'Tablebase ist geeignet fuer diese Stellung.'
-              : 'Tablebase ist meist nur bis 7 Steine sinnvoll.'}
+              ? t('tablebase.suitable')
+              : t('tablebase.usuallyUpTo7')}
           </p>
           {tablebaseData?.category && (
             <p className="mt-1 text-xs text-violet-700 dark:text-violet-300">
@@ -357,7 +359,7 @@ export default function ChessSidebarExplorerPanel({
               </div>
             ))}
             {!loading && !error && (tablebaseData?.moves || []).length === 0 && (
-              <p className="text-xs text-gray-500">Keine Tablebase-Zuege verfuegbar.</p>
+              <p className="text-xs text-gray-500">{t('tablebase.noMoves')}</p>
             )}
           </div>
         </>

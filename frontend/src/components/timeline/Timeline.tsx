@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import MarkdownContent from "../content/MarkdownContent";
 
 export interface TimelineEvent {
@@ -34,8 +35,10 @@ function getTimelineRange(events: TimelineEvent[]) {
 }
 
 export default function Timeline({ events, tagColors, zoom = 0.00001 }: TimelineProps) {
+  const t = useTranslations('Timeline');
+
   if (events.length === 0) {
-    return <div className="text-gray-400 text-center">No events yet.</div>;
+    return <div className="text-gray-400 text-center">{t('timelineEmpty')}</div>;
   }
 
   const { min, max } = getTimelineRange(events);

@@ -1,13 +1,15 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { ChevronRight } from 'lucide-react';
 
 export default function Breadcrumb() {
   const pathname = usePathname();
   const locale = useLocale();
+  const tNav = useTranslations('Navigation');
+  const t = useTranslations('Breadcrumb');
 
   // Remove locale from pathname
   const pathWithoutLocale = pathname.replace(`/${locale}`, '') || '/';
@@ -15,21 +17,21 @@ export default function Breadcrumb() {
 
   // Map of slug to display text
   const slugMap: Record<string, string> = {
-    'chess': 'Chess',
-    'puzzles': 'Puzzles',
+    'chess': tNav('chess'),
+    'puzzles': t('puzzles'),
     'cv': 'CV',
-    'timeline': 'Timeline',
-    'music': 'Music',
-    'studies': 'Studies',
-    'hobbies': 'Hobbies',
-    'sports': 'Sports',
-    'admin': 'Admin',
-    'profile': 'Profile',
-    'survey': 'Survey',
+    'timeline': tNav('timeline'),
+    'music': tNav('music'),
+    'studies': tNav('studies'),
+    'hobbies': tNav('hobbies'),
+    'sports': tNav('sports'),
+    'admin': t('admin'),
+    'profile': t('profile'),
+    'survey': t('survey'),
   };
 
   const getBreadcrumbs = () => {
-    const crumbs = [{ name: 'Home', path: '/', active: segments.length === 0 }];
+    const crumbs = [{ name: tNav('home'), path: '/', active: segments.length === 0 }];
 
     let currentPath = '';
     for (let i = 0; i < segments.length; i++) {
@@ -55,7 +57,7 @@ export default function Breadcrumb() {
   return (
     <nav
       className="flex items-center gap-1 text-xs text-slate-600 dark:text-slate-400"
-      aria-label="Breadcrumb"
+      aria-label={t('ariaLabel')}
     >
       {breadcrumbs.map((crumb, index) => (
         <div key={crumb.path} className="flex items-center gap-1">

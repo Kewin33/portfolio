@@ -23,6 +23,9 @@
     },
     "otherProjects": "Weitere Projekte",
     "otherProjectsNote": "Kleiner Hinweis: Das Portfolio ist noch im Aufbau — hier sind noch nicht alle Projekte. Ich werde nach und nach mehr hinzufügen.",
+    "adminPanel": "Admin Panel",
+    "scrollToAbout": "Zum Über-mich-Bereich scrollen",
+    "close": "Schließen",
     "github": "GitHub",
     "demo": "Demo"
   },
@@ -35,8 +38,17 @@
     "studies": "Studium",
     "sports": "Sport",
     "hobbies": "Hobbies",
+    "portfolioTitle": "Mein Portfolio",
+    "roleLabel": "Rolle",
     "lockedTitle": "Gesperrte Bereiche",
     "lockedDescription": "Diese Bereiche sind noch in Entwicklung und aktuell nur für Admins freigeschaltet."
+  },
+  "Breadcrumb": {
+    "ariaLabel": "Brotkrumen-Navigation",
+    "puzzles": "Puzzles",
+    "admin": "Admin",
+    "profile": "Profil",
+    "survey": "Umfrage"
   },
   "Timeline": {
     "title": "Zeitstrahl",
@@ -57,8 +69,13 @@
     "deletePermanent": "Endgültig löschen",
     "eventTags": "Stichworte",
     "filterTags": "Filter: Tags",
+    "newTagPrompt": "Neuer Tag-Name:",
+    "newTagButton": "+ Neuer Tag",
     "searchTitle": "Nach Titel suchen",
     "zoom": "Zoom",
+    "zoomIn": "Hineinzoomen",
+    "zoomOut": "Herauszoomen",
+    "zoomReset": "Zurücksetzen",
     "loading": "Zeitstrahl wird geladen...",
     "events": {
       "portfolio": {
@@ -277,6 +294,9 @@
     "dailyLimitReached": "Tageslimit erreicht: heute ist bereits ein Puzzle gelöst.",
     "trackingSignedIn": "Fortschritt wird in deinem Konto gespeichert.",
     "trackingGuest": "Gastmodus: Fortschritt ist nur lokal.",
+    "register": "Registrieren",
+    "selectPuzzle": "Puzzle auswählen",
+    "closePuzzle": "Puzzle schließen",
     "roadmapTitle": "Roadmap",
     "loading": "Puzzles werden geladen...",
     "noPuzzles": "Noch keine Puzzles verfügbar.",
@@ -290,6 +310,45 @@
       "wrong": "Falsch, Zug wurde zurückgenommen.",
       "solved": "Puzzle gelöst!"
     },
+    "player": {
+      "confirmPrompt": "Bist du wirklich sicher, dass du nach jeder Variante besser stehst?",
+      "instruction": {
+        "playMove": "Spiele einen Zug auf dem Brett.",
+        "selectGeneratedNode": "Wähle einen erzeugten Knoten aus.",
+        "solutionTreeCorrect": "Lösungsbaum (korrekt)"
+      },
+      "actions": {
+        "help": "Hilfe",
+        "hideHelp": "Hilfe ausblenden",
+        "solution": "Lösung anzeigen",
+        "confirm": "Bestätigen",
+        "verify": "Überprüfen",
+        "warning": "Warnung",
+        "cancel": "Abbrechen",
+        "reset": "Zurücksetzen",
+        "tryAgain": "Erneut versuchen",
+        "deleteNode": "Knoten löschen"
+      },
+      "help": {
+        "step1": "Wenn oben \"Spiele einen Zug auf dem Brett\" steht, mache genau einen Zug auf dem Brett.",
+        "step2": "Wenn oben \"Wähle einen erzeugten Knoten aus\" steht, ziehe nicht auf dem Brett, sondern klicke einen kritischen Knoten im Baum an.",
+        "step3": "Nach dem Klick auf einen kritischen Knoten spielst du von dieser Stellung weiter und wiederholst den Ablauf.",
+        "step4": "Du musst alle kritischen Varianten beachten und lösen, nicht nur eine Linie.",
+        "step5": "Drücke erst auf \"Bestätigen\", wenn keine kritischen Knoten mehr offen sind und alle Pfade bearbeitet wurden."
+      },
+      "feedback": {
+        "selectCriticalNodeFirst": "Wähle zuerst einen kritischen Zugknoten aus.",
+        "nodeSelected": "Knoten ausgewählt. Setze von dieser Stellung fort.",
+        "userNodeDeleted": "Benutzerknoten gelöscht.",
+        "confirmWrong": "Das stimmt nicht.",
+        "unsolvedCritical": "Es gibt noch ungelöste kritische Varianten. Löse alle kritischen Züge, bevor du bestätigst."
+      },
+      "source": {
+        "user": "Benutzer",
+        "critical": "Kritisch"
+      },
+      "userMoves": "Benutzerzüge: {count}"
+    },
     "admin": {
       "title": "Admin Puzzle Studio",
       "setupMode": "Stellung aufbauen",
@@ -299,7 +358,23 @@
       "dashboard": "Puzzle Dashboard",
       "saved": "Puzzle gespeichert.",
       "loaded": "Puzzle geladen.",
-      "sideToMove": "Am Zug"
+      "sideToMove": "Am Zug",
+      "failedToLoad": "Admin-Puzzles konnten nicht geladen werden",
+      "orderSaved": "Reihenfolge gespeichert",
+      "orderSaveFailed": "Reihenfolge konnte nicht gespeichert werden",
+      "titlePlaceholder": "Titel (EN)",
+      "descriptionPlaceholder": "Beschreibung (EN)",
+      "enabled": "aktiv",
+      "addCriticalMove": "+ kritischer Zug",
+      "addDeeper": "+ tiefer",
+      "saveFailed": "Speichern fehlgeschlagen",
+      "criticalMoveTree": "Baum kritischer Züge",
+      "criticalMoveTreeHint": "Top-down-Baum. Wähle einen Knoten und spiele einen Zug auf dem Brett, um ein Kind hinzuzufügen.",
+      "edit": "Bearbeiten",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "noCriticalMovesYet": "Noch keine kritischen Züge.",
+      "select": "Auswählen",
+      "uciMovePlaceholder": "UCI-Zug"
     }
   },
   "MusicPage": {
@@ -329,6 +404,183 @@
       "fitness": "Fitness",
       "travel": "Reisen"
     }
+  },
+  "AccountControls": {
+    "toggleTheme": "Theme wechseln",
+    "switchLanguage": "Sprache wechseln",
+    "dark": "Dunkel",
+    "light": "Hell",
+    "logout": "Logout",
+    "login": "Login",
+    "userFallback": "Benutzer"
+  },
+  "Admin": {
+    "tabs": {
+      "projects": "Projekte",
+      "users": "Nutzer"
+    },
+    "actions": {
+      "close": "Schließen"
+    },
+    "projects": {
+      "title": "Admin: Projekte",
+      "confirmDeleteProject": "Dieses Projekt wirklich löschen?",
+      "noProjectsYet": "Noch keine Projekte.",
+      "noProjectsInSection": "In diesem Bereich gibt es noch keine Projekte.",
+      "noImage": "Kein Bild",
+      "sections": {
+        "main": "Hauptprojekte",
+        "other": "Weitere Projekte"
+      },
+      "actions": {
+        "reload": "Neu laden",
+        "newProject": "+ Neues Projekt",
+        "edit": "Bearbeiten",
+        "delete": "Löschen"
+      },
+      "messages": {
+        "loadedCount": "{count} Projekte geladen",
+        "loadFailed": "Laden fehlgeschlagen: {error}",
+        "updated": "Projekt aktualisiert",
+        "created": "Projekt erstellt",
+        "saveFailed": "Speichern fehlgeschlagen: {error}",
+        "reorderUpdated": "Projektreihenfolge aktualisiert",
+        "reorderFailed": "Neuordnung fehlgeschlagen: {error}",
+        "deleted": "Gelöscht",
+        "deleteFailed": "Löschen fehlgeschlagen: {error}"
+      },
+      "form": {
+        "editProject": "Projekt bearbeiten",
+        "newProject": "Neues Projekt",
+        "projectImage": "Projektbild",
+        "projectImageAlt": "Projektbild",
+        "previewAlt": "Vorschau",
+        "section": {
+          "main": "Haupt",
+          "other": "Weitere"
+        },
+        "placeholders": {
+          "title": "Titel *",
+          "description": "Beschreibung",
+          "github": "GitHub URL",
+          "demo": "Demo URL"
+        },
+        "actions": {
+          "choose": "Wählen",
+          "save": "Speichern",
+          "cancel": "Abbrechen"
+        },
+        "errors": {
+          "titleRequired": "Titel ist erforderlich",
+          "imageUploadFailed": "Bild-Upload fehlgeschlagen",
+          "saveFailed": "Speichern fehlgeschlagen"
+        },
+        "techIcons": {
+          "label": "Tech-Icons",
+          "selectIcon": "Icon auswählen",
+          "searchPlaceholder": "Icons suchen...",
+          "noResults": "Keine Ergebnisse",
+          "removeIcon": "Icon entfernen"
+        }
+      }
+    },
+    "users": {
+      "title": "Admin: Nutzer",
+      "noUsersYet": "Noch keine Nutzer.",
+      "invalidEmail": "Ungültige E-Mail",
+      "confirmApprove": "{email} freigeben?",
+      "confirmDelete": "Nutzer {email} löschen?",
+      "actions": {
+        "reload": "Neu laden",
+        "approve": "Freigeben",
+        "edit": "Bearbeiten",
+        "save": "Speichern",
+        "cancel": "Abbrechen",
+        "delete": "Löschen"
+      },
+      "messages": {
+        "loaded": "Nutzer geladen",
+        "loadFailed": "Laden fehlgeschlagen: {error}",
+        "approved": "Freigegeben: {email}",
+        "approveFailed": "Freigabe fehlgeschlagen: {error}",
+        "deleted": "Gelöscht: {email}",
+        "deleteFailed": "Löschen fehlgeschlagen: {error}",
+        "updated": "Aktualisiert: {email}",
+        "updateFailed": "Update fehlgeschlagen: {error}"
+      }
+    }
+  },
+  "ChessSidebar": {
+    "sections": {
+      "options": "Optionen",
+      "analysis": "Analyse"
+    },
+    "controls": {
+      "depth": "Tiefe",
+      "lines": "Linien",
+      "threads": "Threads",
+      "memoryMb": "Speicher (MB)"
+    },
+    "state": {
+      "active": "aktiv",
+      "off": "aus"
+    },
+    "options": {
+      "engine": "Engine {status}",
+      "setupPosition": "Stellung aufbauen"
+    },
+    "actions": {
+      "resetBoard": "Brett zurücksetzen",
+      "previous": "Vorherige",
+      "next": "Nächste",
+      "menu": "Menü",
+      "openingExplorer": "Eröffnungs-Explorer",
+      "toggleEngine": "Engine umschalten",
+      "engineSettings": "Engine-Einstellungen",
+      "collapseLine": "Linie einklappen",
+      "expandLine": "Linie ausklappen"
+    },
+    "titles": {
+      "openingExplorerTablebase": "Eröffnungs-Explorer / Tablebase"
+    },
+    "source": {
+      "cloud": "Cloud",
+      "local": "Lokal",
+      "idle": "Inaktiv"
+    },
+    "noMovesYet": "Noch keine Züge",
+    "explorer": {
+      "title": "Explorer",
+      "loading": "lädt...",
+      "actions": {
+        "close": "Explorer schließen"
+      },
+      "errors": {
+        "enterLichessUsername": "Bitte gib einen Lichess-Nutzernamen ein."
+      },
+      "player": {
+        "usernamePlaceholder": "Lichess-Benutzername",
+        "white": "Weiß",
+        "black": "Schwarz"
+      },
+      "tableHeaders": {
+        "move": "Zug",
+        "games": "#Partien",
+        "wdw": "Weiß/Remis/Schwarz"
+      },
+      "noDataForPosition": "Keine Daten für diese Stellung.",
+      "tablebase": {
+        "suitable": "Tablebase ist geeignet für diese Stellung.",
+        "usuallyUpTo7": "Tablebase ist meist nur bis 7 Steine sinnvoll.",
+        "noMoves": "Keine Tablebase-Züge verfügbar."
+      }
+    }
+  },
+  "ChessFenPgnPanel": {
+    "fenLabel": "FEN",
+    "fenPlaceholder": "FEN einfügen...",
+    "pgnLabel": "PGN",
+    "pgnPlaceholder": "PGN einfügen..."
   }
   ,
   "Login": {
