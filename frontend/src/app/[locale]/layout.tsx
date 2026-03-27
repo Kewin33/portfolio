@@ -3,8 +3,9 @@ import {getMessages} from 'next-intl/server';
 import {routing} from '@/i18n/routing';
 import {notFound} from 'next/navigation';
 import './globals.css';
-import Sidebar from '@/components/Sidebar';
-import Footer from '@/components/Footer';
+import Sidebar from '@/components/core/navigation/Sidebar';
+import Footer from '@/components/core/navigation/Footer';
+import TopBar from '@/components/core/navigation/TopBar';
 
 export default async function LocaleLayout({
   children,
@@ -14,17 +15,20 @@ export default async function LocaleLayout({
   params: Promise<{locale: string}>;
 }) {
   const {locale} = await params;
+  const availableLocales = routing.locales as readonly string[];
 
-  if (typeof locale !== 'string' || !routing.locales.includes(locale as any)) {
+  if (typeof locale !== 'string' || !availableLocales.includes(locale)) {
     notFound();
   }
+
+  const typedLocale = locale as (typeof routing.locales)[number];
  
-  const messages = await getMessages({locale: locale as any});
+  const messages = await getMessages({locale: typedLocale});
   const siteTitle = 'Alexander Chen — Portfolio';
   const siteDescription = 'Portfolio of Alexander Chen';
  
   return (
-    <html lang={locale}>
+    <html lang={typedLocale}>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{siteTitle}</title>
@@ -35,6 +39,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider messages={messages} locale={locale}>
           <Sidebar />
           <main className="flex-1 w-full relative min-h-screen flex flex-col overflow-y-auto">
+            <TopBar />
             <div className="flex-1">{children}</div>
             <Footer />
           </main>

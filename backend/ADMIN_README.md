@@ -52,3 +52,13 @@ Dateien
 - Admin UI: `frontend/src/components/projects/AdminProjects.tsx`
 - Admin Page: `frontend/src/app/[locale]/projects/admin/page.tsx`
 - Neue Router: `backend/routers/projects.py`
+
+Chess Explorer Proxy
+--------------------
+- `GET /api/chess/explorer/opening?fen=<FEN>&source=masters|lichess|player[&player=<username>]`
+- `GET /api/chess/explorer/tablebase?fen=<FEN>`
+
+Optional kannst du einen Lichess Token serverseitig setzen:
+- `LICHESS_API_TOKEN=<dein_token>` in `backend/.env`
+
+Wichtig: Den Token niemals im Frontend oder in `NEXT_PUBLIC_*` Variablen speichern.

@@ -356,16 +356,15 @@ async def drive_quota(service: DriveService = Depends(get_drive_service)):
 
 @router.get("/drive/health")
 async def drive_health(service: DriveService = Depends(get_drive_service)):
-    """Checks whether service-account auth is configured and Drive API calls work."""
+    """Checks whether OAuth Drive auth is configured and Drive API calls work."""
     status = service.get_token_status()
     if not status.get("configured"):
         return {
             "ok": False,
             "configured": False,
-            "message": "Service account credentials are missing.",
+            "message": "Google Drive OAuth token is missing.",
             "expected_env": [
-                "GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON",
-                "GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH",
+                "GOOGLE_DRIVE_OAUTH_TOKEN_JSON",
             ],
         }
 
@@ -395,8 +394,8 @@ async def drive_health(service: DriveService = Depends(get_drive_service)):
             "source": status.get("source"),
             "storage_mode": service.storage_mode,
             "prefer_description_storage": service.prefer_description_storage,
-            "service_account_email": status.get("service_account_email"),
-            "project_id": status.get("project_id"),
+            "has_refresh_token": status.get("has_refresh_token"),
+            "expiry": status.get("expiry"),
             "timeline_folder_id": service.timeline_folder_id,
             "timeline_folder_accessible": folder_ok,
             "timeline_folder_error": folder_error,
@@ -410,8 +409,8 @@ async def drive_health(service: DriveService = Depends(get_drive_service)):
             "source": status.get("source"),
             "storage_mode": service.storage_mode,
             "prefer_description_storage": service.prefer_description_storage,
-            "service_account_email": status.get("service_account_email"),
-            "project_id": status.get("project_id"),
+            "has_refresh_token": status.get("has_refresh_token"),
+            "expiry": status.get("expiry"),
             "error": str(exc),
         }
 

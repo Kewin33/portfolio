@@ -1,7 +1,7 @@
 "use client";
 
-import PageLayout from '@/components/PageLayout';
-import AuthGuard from '@/components/AuthGuard';
+import PageLayout from '@/components/core/layout/PageLayout';
+import AuthGuard from '@/components/core/auth/AuthGuard';
 import { useTranslations } from 'next-intl';
 
 export default function MusicPage() {

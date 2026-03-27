@@ -2,9 +2,11 @@ import io
 import json
 import os
 import logging
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from google.oauth2 import service_account
+from google.auth.transport.requests import Request as GoogleAuthRequest
+from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseUpload
@@ -17,13 +19,13 @@ USERS_FILE = "users.json"
 
 class DriveService:
     def __init__(self):
-        # Service-account-only authentication.
-        self.service_account_json = os.getenv("GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON", "").strip() or None
-        self.service_account_path = os.getenv(
-            "GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH",
-            os.path.join(os.path.dirname(__file__), "..", "..", "planning", "master-purpose-459609-m3-4f50d48eaae4.json"),
+        self.oauth_token_json = os.getenv("GOOGLE_DRIVE_OAUTH_TOKEN_JSON", "").strip() or None
+        self.oauth_token_path = os.getenv(
+            "GOOGLE_DRIVE_OAUTH_TOKEN_PATH",
+            os.path.join(os.path.dirname(__file__), "..", "..", "planning", "oauth_token.json"),
         )
         self.token_source: str | None = None
+        self.last_oauth_error: str | None = None
         # support both the canonical env var and the older/alternate name used in .env.example
         self.timeline_folder_id = (
             os.getenv("GOOGLE_DRIVE_TIMELINE_FOLDER_ID")
@@ -37,71 +39,175 @@ class DriveService:
         self.storage_mode = os.getenv("GOOGLE_DRIVE_STORAGE_MODE", "auto").strip().lower()
         self.prefer_description_storage = self.storage_mode == "description"
         self.service = None
-        self.credentials = None
+        self.credentials: Credentials | None = None
 
     @staticmethod
     def _is_quota_error(message: str) -> bool:
-        return "storageQuotaExceeded" in message or "Service Accounts do not have storage quota" in message
+        return "storageQuotaExceeded" in message
 
-    def _load_service_account_info(self) -> dict[str, Any] | None:
-        if self.service_account_json:
+    def _load_oauth_token_info(self) -> dict[str, Any] | None:
+        if self.oauth_token_json:
             try:
-                info = json.loads(self.service_account_json)
-                self.token_source = "service-account-env"
+                info = json.loads(self.oauth_token_json)
+                self.token_source = "oauth-env"
                 return info
             except Exception:
-                logging.getLogger(__name__).exception("Failed to parse GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON")
+                logging.getLogger(__name__).exception("Failed to parse GOOGLE_DRIVE_OAUTH_TOKEN_JSON")
 
         try:
-            if self.service_account_path and os.path.exists(self.service_account_path):
-                with open(self.service_account_path, "r", encoding="utf-8") as fh:
+            if self.oauth_token_path and os.path.exists(self.oauth_token_path):
+                with open(self.oauth_token_path, "r", encoding="utf-8") as fh:
                     info = json.load(fh)
-                self.token_source = "service-account-file"
+                self.token_source = "oauth-file"
                 return info
         except Exception:
-            logging.getLogger(__name__).exception("Failed to read service account key file")
+            logging.getLogger(__name__).exception("Failed to parse GOOGLE_DRIVE_OAUTH_TOKEN_PATH file")
 
         return None
 
+    @staticmethod
+    def _parse_expiry(expiry_value: Any) -> datetime | None:
+        if not expiry_value or not isinstance(expiry_value, str):
+            return None
+        try:
+            value = expiry_value.strip()
+            if value.endswith("Z"):
+                value = value[:-1] + "+00:00"
+            parsed = datetime.fromisoformat(value)
+            if parsed.tzinfo is None:
+                return parsed.replace(tzinfo=timezone.utc)
+            return parsed
+        except Exception:
+            return None
+
+    @staticmethod
+    def _extract_http_error_message(exc: HttpError) -> str:
+        if getattr(exc, "content", None):
+            try:
+                return exc.content.decode("utf-8", errors="ignore")
+            except Exception:
+                return str(exc)
+        return str(exc)
+
+    @staticmethod
+    def _format_exception_message(exc: Exception) -> str:
+        msg = str(exc).strip()
+        return msg or exc.__class__.__name__
+
+    def _build_oauth_credentials(self, info: dict[str, Any]) -> Credentials:
+        required_keys = ["refresh_token", "client_id", "client_secret", "token_uri"]
+        missing = [key for key in required_keys if not info.get(key)]
+        if missing:
+            missing_keys = ", ".join(missing)
+            raise RuntimeError(f"GOOGLE_DRIVE_OAUTH_TOKEN_JSON is missing required keys: {missing_keys}")
+
+        creds = Credentials(
+            token=info.get("token") or None,
+            refresh_token=info.get("refresh_token"),
+            token_uri=info.get("token_uri"),
+            client_id=info.get("client_id"),
+            client_secret=info.get("client_secret"),
+            scopes=info.get("scopes") or SCOPES,
+        )
+
+        parsed_expiry = self._parse_expiry(info.get("expiry"))
+        if parsed_expiry is not None:
+            # google-auth internals use naive UTC datetimes for expiry comparisons
+            if parsed_expiry.tzinfo is not None:
+                parsed_expiry = parsed_expiry.astimezone(timezone.utc).replace(tzinfo=None)
+            creds.expiry = parsed_expiry
+
+        return creds
+
+    def _rebuild_service(self) -> None:
+        if self.credentials is None:
+            raise RuntimeError("Google Drive OAuth credentials are not initialized")
+        self.service = build("drive", "v3", credentials=self.credentials)
+
+    def _refresh_access_token_if_needed(self, force: bool = False) -> bool:
+        if self.credentials is None:
+            raise RuntimeError("Google Drive OAuth credentials are not initialized")
+
+        now = datetime.now(timezone.utc)
+        expiry = self.credentials.expiry
+        if isinstance(expiry, datetime) and expiry.tzinfo is None:
+            expiry = expiry.replace(tzinfo=timezone.utc)
+
+        should_refresh = force or not self.credentials.token
+        if isinstance(expiry, datetime) and expiry <= (now + timedelta(seconds=60)):
+            should_refresh = True
+
+        if not should_refresh:
+            return False
+
+        try:
+            self.credentials.refresh(GoogleAuthRequest())
+            self.last_oauth_error = None
+            return True
+        except Exception as exc:
+            self.last_oauth_error = self._format_exception_message(exc)
+            logging.getLogger(__name__).exception("Failed to refresh Google Drive OAuth access token")
+            raise RuntimeError(
+                f"Failed to refresh Google Drive OAuth access token: {self.last_oauth_error}"
+            ) from exc
+
+    def _normalize_expiry(self, value: datetime | None) -> str | None:
+        if not isinstance(value, datetime):
+            return None
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        return value.isoformat()
+
     def get_token_status(self) -> dict[str, Any]:
-        sa_info = self._load_service_account_info()
-        if sa_info:
-            return {
+        oauth_info = self._load_oauth_token_info()
+        if oauth_info:
+            parsed_expiry = self._parse_expiry(oauth_info.get("expiry"))
+            now = datetime.now(timezone.utc)
+            status: dict[str, Any] = {
                 "configured": True,
                 "source": self.token_source,
-                "auth_mode": "service_account",
-                "service_account_email": sa_info.get("client_email"),
-                "project_id": sa_info.get("project_id"),
-                "scopes": SCOPES,
+                "auth_mode": "oauth_refresh_token",
+                "client_id": oauth_info.get("client_id"),
+                "token_uri": oauth_info.get("token_uri"),
+                "scopes": oauth_info.get("scopes") or SCOPES,
                 "valid": True,
-                "expired": False,
-                "has_refresh_token": False,
-                "token_path": self.service_account_path if self.token_source == "service-account-file" else None,
+                "expired": bool(parsed_expiry and parsed_expiry <= now),
+                "has_refresh_token": bool(oauth_info.get("refresh_token")),
+                "expiry": self._normalize_expiry(parsed_expiry),
             }
+            if self.last_oauth_error:
+                status["auth_error"] = self.last_oauth_error
+            return status
 
         return {
             "configured": False,
             "source": None,
             "auth_mode": None,
-            "token_path": self.service_account_path,
+            "expected_env": ["GOOGLE_DRIVE_OAUTH_TOKEN_JSON", "GOOGLE_DRIVE_OAUTH_TOKEN_PATH"],
         }
 
     def ensure_service(self):
-        if self.service:
+        if self.service and self.credentials:
+            if self._refresh_access_token_if_needed(force=False):
+                self._rebuild_service()
             return
-        service_account_info = self._load_service_account_info()
-        if not service_account_info:
+
+        oauth_info = self._load_oauth_token_info()
+        if not oauth_info:
             raise RuntimeError(
-                "No Google Drive service account credentials configured. Set GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON or GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH."
+                "No Google Drive OAuth token configured. Set GOOGLE_DRIVE_OAUTH_TOKEN_JSON with refresh_token, client_id, client_secret and token_uri."
             )
 
         try:
-            creds = service_account.Credentials.from_service_account_info(service_account_info, scopes=SCOPES)
-            self.credentials = creds
-            self.service = build("drive", "v3", credentials=creds)
+            self.credentials = self._build_oauth_credentials(oauth_info)
+            self._refresh_access_token_if_needed(force=not bool(self.credentials.token))
+            self._rebuild_service()
+            self.last_oauth_error = None
         except Exception as exc:
-            logging.getLogger(__name__).exception("Failed to load service account credentials")
-            raise RuntimeError("Failed to load service account credentials") from exc
+            root_error = self._format_exception_message(exc)
+            self.last_oauth_error = root_error
+            logging.getLogger(__name__).exception("Failed to initialize Google Drive OAuth credentials")
+            raise RuntimeError(f"Failed to initialize Google Drive OAuth credentials: {root_error}") from exc
 
     def _build_service(self):
         # try to reuse the same resolution logic as ensure_service
@@ -112,13 +218,23 @@ class DriveService:
             raise
 
     def _execute(self, request):
+        self.ensure_service()
         try:
             return request.execute()
         except HttpError as exc:
             status = getattr(getattr(exc, "resp", None), "status", None)
-            message = ""
-            if getattr(exc, "content", None):
-                message = exc.content.decode("utf-8", errors="ignore")
+            if status == 401:
+                self._refresh_access_token_if_needed(force=True)
+                try:
+                    return request.execute()
+                except HttpError as retry_exc:
+                    retry_status = getattr(getattr(retry_exc, "resp", None), "status", None)
+                    retry_message = self._extract_http_error_message(retry_exc)
+                    raise RuntimeError(
+                        f"Google Drive API error after OAuth refresh (status={retry_status}): {retry_message}"
+                    ) from retry_exc
+
+            message = self._extract_http_error_message(exc)
             raise RuntimeError(f"Google Drive API error (status={status}): {message}") from exc
 
     def _find_timeline_file(self) -> str | None:
@@ -441,7 +557,7 @@ class DriveService:
                 if self.storage_mode == "media":
                     raise RuntimeError(
                         "Media storage is enforced (GOOGLE_DRIVE_STORAGE_MODE=media) but upload quota is unavailable for this identity. "
-                        "Move target to Shared Drive/freigegebenen Ordner and ensure service account has access."
+                        "Move target to Shared Drive/freigegebenen Ordner and ensure the OAuth identity has access."
                     ) from exc
                 self.prefer_description_storage = True
                 # Try creating a new file; if that fails, fallback to description metadata.

@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 
 import Timeline, { TimelineEvent } from "../../../components/timeline/Timeline";
-import useTimelineData from '@/hooks/useTimelineData';
+import useTimelineData from '@/hooks/timeline/useTimelineData';
+import SectionHeader from '@/components/content/SectionHeader';
 
 const TAB_KEYS = ["education", "projects", /*"hardskills",*/ "awards", "softskills"] as const;
 type TabKey = typeof TAB_KEYS[number];
@@ -37,7 +38,7 @@ export default function CVPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="w-full px-4 md:px-8 lg:px-12 py-8">
-      <h1 className="mt-16 text-3xl font-bold mb-4">{t('title') || 'CV'}</h1>
+      <SectionHeader title={t('title') || 'CV'} compact />
 
       <div className="mb-6 flex gap-2 flex-wrap">
         {TAB_KEYS.map((k) => (

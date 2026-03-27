@@ -24,6 +24,22 @@ Diese Datei dokumentiert die aktuell in `backend/routers/` vorhandenen Endpunkte
   - Antwort: `{ "email": "...", "role": "..." }`
   - Auth: benötigt gültiges Access-Token
 
+- GET `/drive/oauth/start`
+  - Beschreibung: Startet den Google OAuth Flow für Drive (liefert Redirect auf Consent Screen).
+  - Query (optional): `redirect_uri`, `do_redirect`
+  - Antwort: Redirect auf Google oder JSON mit `auth_url` und `state`
+  - Auth: keine
+
+- GET `/drive/oauth/callback`
+  - Beschreibung: OAuth Callback, tauscht `code` gegen Token und speichert `GOOGLE_DRIVE_OAUTH_TOKEN_JSON`.
+  - Query: `code`, `state`, optional `redirect_uri`
+  - Antwort: `{ "ok": true, "message": "...", "has_refresh_token": true, ... }`
+  - Auth: keine
+
+- GET `/drive/oauth/status`
+  - Beschreibung: Gibt aktuellen Drive OAuth Status zurück (`configured`, `expired`, `has_refresh_token`, optional `auth_error`).
+  - Auth: keine
+
 ---
 
 ## projects.py
@@ -141,8 +157,7 @@ Hinweis: Standard-Events (DEFAULT_TIMELINE_EVENTS) werden erzeugt, falls keine E
 - Admin-geschützte Endpunkte verwenden die Dependency `require_admin` aus `services.auth_service`.
 - Access-Tokens werden mit `create_access_token` erzeugt und mit `verify_access_token` validiert (siehe `services/auth_service.py`).
 - Environment-Variablen (wichtige Beispiele):
-  - `GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` – Empfohlen für Produktion: komplettes Service-Account-JSON als ENV (ein Schlüssel, kein interaktiver Login)
-  - `GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH` – Alternativ: Pfad zur Service-Account-JSON-Datei
+  - `GOOGLE_DRIVE_OAUTH_TOKEN_JSON` – OAuth-Token-JSON als ENV (inkl. `refresh_token`, `client_id`, `client_secret`, `token_uri`)
   - `ADMIN_PASSWORD` – Passwort für `/admin` login
   - `GLOBAL_PASSWORD` – Passwort für `/global` Token
 
@@ -150,7 +165,7 @@ Hinweis: Standard-Events (DEFAULT_TIMELINE_EVENTS) werden erzeugt, falls keine E
 
 ## Dateipfade & Persistenz (Kurzüberblick)
 
-- Service Account key: bevorzugt via `GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` oder Datei-Pfad `GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH`
+- Drive OAuth token: `GOOGLE_DRIVE_OAUTH_TOKEN_JSON` als Quelle fuer Drive-Auth
 - Projects are stored and read from Google Drive; there is no local projects.json fallback.
 - Timeline tags meta: `planning/timeline_tags.json`
 - Timeline backups: `planning/backups/`

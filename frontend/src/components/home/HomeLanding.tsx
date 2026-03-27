@@ -57,7 +57,23 @@ export default function HomeLanding() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setAdminRole(localStorage.getItem('role'));
+      const checkRole = async () => {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        try {
+          const API_BASE = (process.env.NEXT_PUBLIC_API_BASE as string) || (process.env.NEXT_PUBLIC_BACKEND_URL as string) || '';
+          const res = await fetch(`${API_BASE}/api/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+          if (res.ok) {
+            const data = await res.json();
+            setAdminRole(data.role);
+          } else {
+            localStorage.removeItem('token');
+          }
+        } catch {
+          // ignore
+        }
+      };
+      checkRole();
       setMounted(true);
     }
   }, []);

@@ -2,41 +2,46 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Home, BookOpen, Music, Target, Activity, Settings, Lock } from 'lucide-react';
-import { useLocale, useTranslations } from 'next-intl';
-import { Link, usePathname, useRouter } from '@/i18n/routing';
+import { Menu, X, Home, BookOpen, Music, Crown, Activity, Settings, Lock } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
+import AccountControls from '@/components/core/auth/AccountControls';
+import { useUser } from '@/hooks/auth/useUser';
+
+interface NavItem {
+  name: string;
+  path: string;
+  icon: React.ReactNode;
+  adminOnly?: boolean;
+}
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const t = useTranslations('Navigation');
-  const locale = useLocale();
-  const router = useRouter();
-  const pathname = usePathname();
+  const { user } = useUser();
   
-  const navItems = [
+  const navItems: NavItem[] = [
     { name: t('home'), path: '/', icon: <Home size={24} /> },
     { name: t('cv'), path: '/cv', icon: <BookOpen size={24} /> },
+    { name: t('chess'), path: '/chess', icon: <Crown size={24} /> },
     { name: t('timeline'), path: '/timeline', icon: <BookOpen size={24} />, adminOnly: true },
-    { name: t('chess'), path: '/chess', icon: <Target size={24} />, adminOnly: true },
     { name: t('music'), path: '/music', icon: <Music size={24} />, adminOnly: true },
     { name: t('studies'), path: '/studies', icon: <BookOpen size={24} />, adminOnly: true },
     { name: t('hobbies'), path: '/hobbies', icon: <Settings size={24} />, adminOnly: true },
     { name: t('sports'), path: '/sports', icon: <Activity size={24} />, adminOnly: true },
   ];
 
-  // read role from localStorage token (set by login)
-  const [role, setRole] = useState<string | null>(null);
+  const role = user?.role || null;
   const isAdmin = role === 'admin';
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setRole(localStorage.getItem('role'));
-    }
-  }, []);
 
-  // update role when other tabs change localStorage
+  // update role when other tabs change token
   useEffect(() => {
     function onStorage(e: StorageEvent) {
-      if (e.key === 'role') setRole(e.newValue);
+      if (e.key === 'token') {
+        if (e.newValue) {
+          window.location.reload();
+        }
+      }
     }
     if (typeof window !== 'undefined') {
       window.addEventListener('storage', onStorage);
@@ -48,53 +53,11 @@ export default function Sidebar() {
     };
   }, []);
 
-  // Dark mode toggle (Tailwind expects 'dark' class on <html>)
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' ||
-        (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return false;
-  });
-
-  // Sync dark mode class whenever mode changes
-  useEffect(() => {
-    if (typeof document !== 'undefined') {
-      if (darkMode) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-    }
-  }, [darkMode]);
-
-  const handleDarkModeToggle = () => {
-    setDarkMode((prev) => {
-      const next = !prev;
-      if (typeof document !== 'undefined') {
-        if (next) {
-          document.documentElement.classList.add('dark');
-          localStorage.setItem('theme', 'dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-          localStorage.setItem('theme', 'light');
-        }
-      }
-      return next;
-    });
-  };
-
-  const switchLocale = () => {
-    const nextLocale = locale === 'en' ? 'de' : 'en';
-    router.replace(pathname, { locale: nextLocale });
-    setIsOpen(false);
-  };
-
   return (
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed top-6 left-6 z-50 p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:scale-105 transition-transform"
+        className="fixed top-[84px] left-16 z-50 p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:scale-105 transition-transform"
       >
         <Menu size={24} className="text-gray-900 dark:text-gray-100" />
       </button>
@@ -134,14 +97,13 @@ export default function Sidebar() {
 
               <nav className="flex-1 flex flex-col gap-4 overflow-y-auto hide-scrollbar">
                 {navItems.map((item, i) => (
-                  (item as any).requiredRole && role && ((role !== 'admin' && role !== 'global' && role !== (item as any).requiredRole)) ? null : (
                   <motion.div
                     key={item.path}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.1 }}
                   >
-                    {(item as any).adminOnly && !isAdmin ? (
+                    {item.adminOnly && !isAdmin ? (
                       <div className="flex items-center justify-between gap-4 rounded-xl border border-dashed border-gray-300 p-4 text-lg font-medium text-gray-400 dark:border-gray-700 dark:text-gray-500">
                         <div className="flex items-center gap-4">
                           {item.icon}
@@ -159,11 +121,10 @@ export default function Sidebar() {
                           {item.icon}
                           <span>{item.name}</span>
                         </div>
-                        {(item as any).adminOnly ? <Lock size={18} className="opacity-70" /> : null}
+                        {item.adminOnly ? <Lock size={18} className="opacity-70" /> : null}
                       </Link>
                     )}
                   </motion.div>
-                  )
                 ))}
               </nav>
 
@@ -177,30 +138,7 @@ export default function Sidebar() {
                     <p>{t('lockedDescription')}</p>
                   </div>
                 )}
-                <div className="flex justify-center gap-4 mb-4">
-                  <button
-                    onClick={handleDarkModeToggle}
-                    className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
-                  >
-                    {darkMode ? '🌙 Dark' : '☀️ Light'}
-                  </button>
-                  <button
-                    onClick={switchLocale}
-                    className="px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
-                  >
-                    {locale === 'en' ? 'DE' : 'EN'}
-                  </button>
-                </div>
-                <div className="flex justify-center gap-4 mb-2 items-center">
-                  {role ? (
-                    <>
-                      <div className="text-sm text-gray-700 dark:text-gray-300">Signed in as <strong className="ml-1">{role}</strong></div>
-                      <button onClick={() => { localStorage.removeItem('token'); localStorage.removeItem('role'); setRole(null); setIsOpen(false); window.location.href = '/'; }} className="px-4 py-2 rounded bg-red-500 text-white">Logout</button>
-                    </>
-                  ) : (
-                    <a href="/login" className="px-4 py-2 rounded bg-blue-600 text-white">Login</a>
-                  )}
-                </div>
+                <AccountControls variant="sidebar" className="mb-3 text-left" />
                 © {new Date().getFullYear()} Alexander Chen
               </div>
             </motion.div>

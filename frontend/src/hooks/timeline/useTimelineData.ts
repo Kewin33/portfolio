@@ -81,7 +81,7 @@ export default function useTimelineData(defaultEvents: TimelineEvent[] = [], tag
     checkAdminServer();
 
     const onStorage = (e: StorageEvent) => {
-      if (e.key === 'token' || e.key === 'role') {
+      if (e.key === 'token') {
         checkAdminServer();
       }
     };

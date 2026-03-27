@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from routers import storage, auth
-from routers import users, projects
+from routers import users, projects, chess, survey, chess_puzzles
 
 
 def _load_env_file(file_path: Path) -> None:
@@ -49,6 +49,9 @@ app.include_router(storage.router, prefix="/api/storage", tags=["Storage"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(users.router, prefix="/api/users", tags=["Users"])
 app.include_router(projects.router, prefix="/api/projects", tags=["Projects"])
+app.include_router(chess.router, prefix="/api/chess", tags=["Chess"])
+app.include_router(chess_puzzles.router, prefix="/api/chess", tags=["Chess Puzzles"])
+app.include_router(survey.router, prefix="/api/survey", tags=["Survey"])
 
 @app.get("/")
 def root():

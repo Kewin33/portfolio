@@ -1,8 +1,20 @@
-// Minimal worker that loads Stockfish from CDN to avoid bundling Node-only modules.
-// It delegates directly to the upstream stockfish worker implementation.
+// Worker bootstrap with resilient CDN fallback (standard Stockfish JS only).
+const stockfishSources = [
+	'https://unpkg.com/stockfish.js@latest/stockfish.js',
+	'https://cdn.jsdelivr.net/npm/stockfish.js@latest/stockfish.js',
+];
 
-// Use a specific CDN path; `@latest` is used for convenience but pin a version for production.
-importScripts('https://unpkg.com/stockfish.js@latest/stockfish.js');
+let loaded = false;
+for (const source of stockfishSources) {
+	try {
+		importScripts(source);
+		loaded = true;
+		break;
+	} catch (error) {
+		// Try the next source.
+	}
+}
 
-// The loaded script defines its own `onmessage` handler and `postMessage` interface.
-// No additional code required here.
+if (!loaded) {
+	throw new Error('Failed to load Stockfish worker script from all sources.');
+}

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@emailjs/browser": "^3.3.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "chess.js": "^1.4.0",
     "framer-motion": "^12.34.3",
     "highlight.js": "^11.11.1",

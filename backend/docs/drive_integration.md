@@ -8,23 +8,31 @@ Diese Doku beschreibt die konsistente Speicherung der Timeline-Daten in Google D
 - Quelle der Wahrheit: **nur Drive** (kein lokales Persistenz-File)
 
 ## Credentials
-- Empfohlen: Service Account (ein Schlüssel, kein interaktiver OAuth-Flow)
-  - `GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` (komplettes JSON als Secret)
-  - oder `GOOGLE_DRIVE_SERVICE_ACCOUNT_PATH` (Dateipfad zur JSON-Datei)
-- Optional für Service Accounts ohne eigenes Drive-Quota: `GOOGLE_DRIVE_SHARED_ROOT_FOLDER_ID`
-  - ID eines freigegebenen Ordners oder Shared-Drive-Ordners, auf den der Service-Account Zugriff hat.
-- Alternative ohne Ordner-Erstellung:
-  - `GOOGLE_DRIVE_TIMELINE_FOLDER_ID`: vorhandener Zielordner für `timeline_events.json`
+- Drive-Auth erfolgt per OAuth-Token-JSON in ENV:
+  - `GOOGLE_DRIVE_OAUTH_TOKEN_JSON` (muss mindestens `refresh_token`, `client_id`, `client_secret`, `token_uri` enthalten)
+- Optional fuer Drive-Ziel:
+  - `GOOGLE_DRIVE_TIMELINE_FOLDER_ID`: vorhandener Zielordner fuer `timeline_events.json`
   - `GOOGLE_DRIVE_TIMELINE_FILE_ID`: vorhandene JSON-Datei, die direkt gelesen/aktualisiert wird
-- Wichtiger Setup-Schritt bei Service Account:
-  - Den Zielordner in Google Drive mit der `client_email` des Service Accounts teilen (Editor-Rechte), sonst sind keine Lese-/Schreibzugriffe moeglich.
+- Alternative ohne Ordner-Erstellung:
+  - Der per OAuth angemeldete Google-Account muss auf den Zielordner Zugriff haben.
 
 ## Backend API
 Basisroute: `/api/storage`
 
 ### 0) Health / Verbindungstest
 - `GET /drive/health`
-- Prüft Service-Account-Konfiguration und ob API-Zugriff/Ordnerzugriff funktioniert.
+- Prueft OAuth-Konfiguration und ob API-Zugriff/Ordnerzugriff funktioniert.
+
+### OAuth Setup Flow (neu)
+- `GET /api/auth/drive/start` (Alias: `/api/auth/drive/oauth/start`)
+  - Startet den Google OAuth Consent Flow.
+  - Default Redirect URI: `http://localhost:8000/api/auth/drive/callback`
+  - Diese URI muss exakt im Google OAuth Client als Redirect URI eingetragen sein.
+- `GET /api/auth/drive/callback` (Alias: `/api/auth/drive/oauth/callback`)
+  - Tauscht den Authorization Code gegen Access/Refresh Token.
+  - Speichert den Token in `GOOGLE_DRIVE_OAUTH_TOKEN_JSON` (backend `.env`) und `planning/oauth_token.json`.
+- `GET /api/auth/drive/status` (Alias: `/api/auth/drive/oauth/status`)
+  - Zeigt den aktuellen Drive OAuth Status (`configured`, `expired`, `has_refresh_token`, optional `auth_error`).
 
 ### 1) Events laden
 - `GET /timeline/events`
@@ -57,7 +65,7 @@ Verhalten:
 - Backend schreibt die komplette Eventliste nach Drive.
 - Fehlende `id` werden serverseitig als UUID ergänzt.
 - Falls `timeline_events.json` noch fehlt, wird sie automatisch erzeugt und ihre ID intern verwendet.
-- Wenn Media-Upload wegen Service-Account-Quota blockiert wird, nutzt der Service automatisch ein Fallback über Datei-Metadaten (`description`) derselben Datei.
+- Wenn Media-Upload wegen Quota blockiert wird, nutzt der Service automatisch ein Fallback ueber Datei-Metadaten (`description`) derselben Datei.
 
 ### 3) Soft Delete
 - `PATCH /timeline/events/{event_id}/soft-delete`
@@ -72,5 +80,5 @@ Verhalten:
 
 ## Hinweis
 - Für Produktion `NEXT_PUBLIC_BACKEND_URL` im Frontend setzen (z. B. Render-URL).
-- Wenn bei `PUT /timeline/events` ein 403 mit `storageQuotaExceeded` erscheint, muss ein Shared-Drive/Shared-Folder genutzt und `GOOGLE_DRIVE_SHARED_ROOT_FOLDER_ID` gesetzt werden.
-- Wenn der Service-Account trotzdem nichts neu anlegen darf: `timeline_events.json` manuell im Zielordner anlegen, die Datei-ID als `GOOGLE_DRIVE_TIMELINE_FILE_ID` setzen; dann erfolgen nur Updates auf dieser Datei.
+- Wenn bei `PUT /timeline/events` ein 403 mit `storageQuotaExceeded` erscheint, muss ein Shared-Drive/Shared-Folder genutzt werden.
+- Wenn keine Neuanlage im Zielordner moeglich ist: `timeline_events.json` manuell im Zielordner anlegen und die Datei-ID als `GOOGLE_DRIVE_TIMELINE_FILE_ID` setzen; dann erfolgen nur Updates auf dieser Datei.

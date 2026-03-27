@@ -7,3 +7,5 @@ PyJWT
 python-multipart
 requests
 pydantic
+stockfish
+google-auth-oauthlib

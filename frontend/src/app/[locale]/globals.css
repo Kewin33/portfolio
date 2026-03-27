@@ -27,6 +27,159 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.page-section-head {
+  max-width: 56rem;
+  margin: 0 auto 2.5rem;
+  text-align: center;
+}
+
+.page-section-title {
+  font-size: clamp(2rem, 4.5vw, 3.5rem);
+  line-height: 1.05;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.page-section-subtitle {
+  margin-top: 0.75rem;
+  font-size: clamp(1rem, 1.6vw, 1.25rem);
+  color: #64748b;
+}
+
+.dark .page-section-title {
+  color: #f1f5f9;
+}
+
+.dark .page-section-subtitle {
+  color: #94a3b8;
+}
+
+.survey-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  border: 1px dashed #94a3b8;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(226, 232, 240, 0.5));
+}
+
+.dark .survey-shell {
+  border-color: #475569;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.7));
+}
+
+.survey-shell-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+}
+
+.dark .survey-shell-badge {
+  color: #93c5fd;
+}
+
+.survey-shell-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.survey-shell-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+  background: #ffffff;
+  transition: all 160ms ease;
+}
+
+.survey-shell-link:hover {
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.dark .survey-shell-link {
+  border-color: #334155;
+  color: #e2e8f0;
+  background: #0f172a;
+}
+
+.dark .survey-shell-link:hover {
+  border-color: #60a5fa;
+  color: #93c5fd;
+}
+
+.survey-tool {
+  color: #0f172a;
+}
+
+.dark .survey-tool {
+  color: #e2e8f0;
+}
+
+.survey-tool h1 {
+  font-size: clamp(2rem, 4.2vw, 3.1rem);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+}
+
+.dark .survey-tool h1 {
+  color: #f1f5f9;
+}
+
+.survey-tool h2 {
+  font-size: clamp(1.125rem, 1.7vw, 1.375rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #1e293b;
+}
+
+.dark .survey-tool h2 {
+  color: #e2e8f0;
+}
+
+.survey-tool p,
+.survey-tool label,
+.survey-tool li {
+  color: #475569;
+}
+
+.dark .survey-tool p,
+.dark .survey-tool label,
+.dark .survey-tool li {
+  color: #94a3b8;
+}
+
+.survey-tool article,
+.survey-tool table,
+.survey-tool .survey-card {
+  border-color: #e2e8f0;
+  background: #ffffff;
+}
+
+.dark .survey-tool article,
+.dark .survey-tool table,
+.dark .survey-tool .survey-card {
+  border-color: #1e293b;
+  background: #0b1220;
+}
+
+.survey-tool button {
+  transition: all 180ms ease;
+}
+
 /* Utility to hide scrollbars while keeping scroll functionality */
 .hide-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */

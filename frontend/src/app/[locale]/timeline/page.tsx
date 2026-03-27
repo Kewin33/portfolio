@@ -5,11 +5,12 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 
 import Timeline, { TimelineEvent } from "../../../components/timeline/Timeline";
-import AuthGuard from '@/components/AuthGuard';
+import AuthGuard from '@/components/core/auth/AuthGuard';
 import Tag from '@/components/timeline/Tag';
 import TagSelect from '@/components/timeline/TagSelect';
 import FilterBar from '@/components/timeline/FilterBar';
-import useTimelineData from '@/hooks/useTimelineData';
+import useTimelineData from '@/hooks/timeline/useTimelineData';
+import SectionHeader from '@/components/content/SectionHeader';
 
 type StoredTimelineEvent = TimelineEvent & {
   id?: string;
@@ -279,7 +280,7 @@ export default function TimelinePage() {
       transition={{ duration: 0.6 }}
       className="relative w-full px-4 md:px-8 lg:px-12 py-8"
     >
-      <h1 className="mt-16 text-3xl font-bold mb-6">{t("title")}</h1>
+      <SectionHeader title={t("title")} compact />
       <FilterBar
         availableTags={availableTags}
         selected={selectedTags}
